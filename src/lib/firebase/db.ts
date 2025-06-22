@@ -226,7 +226,6 @@ export async function getPatientProfile(
   }
 }
 
-// Get doctor profile specifically
 export async function getDoctorProfile(
   uid: string
 ): Promise<DoctorProfile | null> {
@@ -236,17 +235,20 @@ export async function getDoctorProfile(
 
     if (doctorSnap.exists()) {
       const profileData = doctorSnap.data();
-      return {
+      const profile = {
         ...profileData,
         createdAt: profileData.createdAt?.toDate() || new Date(),
         updatedAt: profileData.updatedAt?.toDate() || new Date(),
         specialization: profileData.specialization || [],
         qualifications: profileData.qualifications || [],
         isApproved: profileData.isApproved || false,
+        profileCompleted: profileData.profileCompleted || false,
         experience: profileData.experience || 0,
         licenseNumber: profileData.licenseNumber || "",
         hospital: profileData.hospital || "",
       } as DoctorProfile;
+
+      return profile;
     }
 
     return null;
@@ -457,33 +459,31 @@ export async function rejectDoctorAccount(uid: string): Promise<void> {
   }
 }
 
-
 export async function completeDoctorProfile(
   uid: string,
   profileData: CompleteDoctorProfileData
 ): Promise<void> {
   try {
-    const doctorRef = doc(db, COLLECTIONS.DOCTORS, uid)
-    const timestamp = serverTimestamp()
-    
+    const doctorRef = doc(db, COLLECTIONS.DOCTORS, uid);
+    const timestamp = serverTimestamp();
+
     await updateDoc(doctorRef, {
       ...profileData,
       profileCompleted: true,
-      updatedAt: timestamp
-    })
-    
+      updatedAt: timestamp,
+    });
+
     // Also update the user profile to mark as verified
-    const userRef = doc(db, COLLECTIONS.USERS, uid)
+    const userRef = doc(db, COLLECTIONS.USERS, uid);
     await updateDoc(userRef, {
       isVerified: true,
-      updatedAt: timestamp
-    })
+      updatedAt: timestamp,
+    });
   } catch (error) {
-    console.error('Error completing doctor profile:', error)
-    throw new Error('Failed to complete doctor profile')
+    console.error("Error completing doctor profile:", error);
+    throw new Error("Failed to complete doctor profile");
   }
 }
-
 
 // Create doctor profile (admin only)
 export async function createDoctorProfile(
@@ -491,37 +491,37 @@ export async function createDoctorProfile(
   doctorData: Partial<DoctorProfile>
 ): Promise<void> {
   try {
-    const doctorRef = doc(db, COLLECTIONS.DOCTORS, uid)
-    const timestamp = serverTimestamp()
-    
+    const doctorRef = doc(db, COLLECTIONS.DOCTORS, uid);
+    const timestamp = serverTimestamp();
+
     await setDoc(doctorRef, {
       ...doctorData,
       uid,
-      role: 'doctor' as UserRole,
+      role: "doctor" as UserRole,
       createdAt: timestamp,
       updatedAt: timestamp,
       isApproved: doctorData.isApproved || false,
       profileCompleted: doctorData.profileCompleted || false,
       specialization: doctorData.specialization || [],
       qualifications: doctorData.qualifications || [],
-      experience: doctorData.experience || 0
-    })
+      experience: doctorData.experience || 0,
+    });
   } catch (error) {
-    console.error('Error creating doctor profile:', error)
-    throw new Error('Failed to create doctor profile')
+    console.error("Error creating doctor profile:", error);
+    throw new Error("Failed to create doctor profile");
   }
 }
 
 // Get incomplete doctor profiles (for admin dashboard)
 export async function getIncompleteDoctorProfiles(): Promise<DoctorProfile[]> {
   try {
-    const doctorsRef = collection(db, COLLECTIONS.DOCTORS)
-    const q = query(doctorsRef, where('profileCompleted', '==', false))
-    const querySnapshot = await getDocs(q)
-    
-    const incompleteDoctors: DoctorProfile[] = []
+    const doctorsRef = collection(db, COLLECTIONS.DOCTORS);
+    const q = query(doctorsRef, where("profileCompleted", "==", false));
+    const querySnapshot = await getDocs(q);
+
+    const incompleteDoctors: DoctorProfile[] = [];
     querySnapshot.forEach((doc) => {
-      const data = doc.data()
+      const data = doc.data();
       incompleteDoctors.push({
         ...data,
         createdAt: data.createdAt?.toDate() || new Date(),
@@ -530,13 +530,13 @@ export async function getIncompleteDoctorProfiles(): Promise<DoctorProfile[]> {
         qualifications: data.qualifications || [],
         isApproved: data.isApproved || false,
         profileCompleted: data.profileCompleted || false,
-        experience: data.experience || 0
-      } as DoctorProfile)
-    })
-    
-    return incompleteDoctors
+        experience: data.experience || 0,
+      } as DoctorProfile);
+    });
+
+    return incompleteDoctors;
   } catch (error) {
-    console.error('Error getting incomplete doctor profiles:', error)
-    return []
+    console.error("Error getting incomplete doctor profiles:", error);
+    return [];
   }
 }

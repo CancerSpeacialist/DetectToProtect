@@ -20,6 +20,24 @@ export default function DoctorLayout({
     null
   );
   const [profileLoading, setProfileLoading] = useState(true);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // Function to load doctor profile
+  const loadDoctorProfile = async () => {
+    if (!user || user.role !== "doctor") return;
+
+    try {
+      setProfileLoading(true);
+
+      const profile = await getDoctorProfile(user.uid);
+
+      setDoctorProfile(profile);
+    } catch (error) {
+      console.error("Error loading doctor profile:", error);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (!loading && !user) {
@@ -27,20 +45,9 @@ export default function DoctorLayout({
     } else if (!loading && user && user.role !== "doctor") {
       router.push("/patient/dashboard");
     } else if (user && user.role === "doctor") {
-      // Load doctor profile to check completion status
-      const loadDoctorProfile = async () => {
-        try {
-          const profile = await getDoctorProfile(user.uid);
-          setDoctorProfile(profile);
-        } catch (error) {
-          console.error("Error loading doctor profile:", error);
-        } finally {
-          setProfileLoading(false);
-        }
-      };
       loadDoctorProfile();
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, refreshTrigger]);
 
   if (loading || profileLoading) {
     return (
@@ -60,10 +67,9 @@ export default function DoctorLayout({
       <CompleteDoctorProfile
         doctorUid={user.uid}
         onSuccess={() => {
-          setDoctorProfile((prev) =>
-            prev ? { ...prev, profileCompleted: true } : null
-          );
-          router.refresh();
+          console.log("Profile completion success callback triggered"); // Debug log
+          // Force refresh by updating the trigger
+          setRefreshTrigger((prev) => prev + 1);
         }}
       />
     );
@@ -102,6 +108,9 @@ export default function DoctorLayout({
               account is currently under admin review. You'll receive email
               notification once approved.
             </p>
+            <div className="text-sm text-gray-500 mb-4">
+              Profile Status: ✅ Completed | Approval Status: ⏳ Pending
+            </div>
             <Button onClick={signOut} variant="outline" className="w-full">
               Sign Out
             </Button>
