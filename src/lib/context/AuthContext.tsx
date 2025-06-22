@@ -16,10 +16,12 @@ import {
   DoctorProfile,
   AuthContextType,
   PatientSignUpData,
+  AdminSignInData,
 } from "../types/auth";
 import {
   signUpPatient,
   signInUser,
+  signInAdmin,
   signOutUser,
   resetUserPassword,
 } from "../firebase/auth";
@@ -75,6 +77,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const adminSignIn = async (credentials: AdminSignInData) => {
+    try {
+      const { user: firebaseUser, role } = await signInAdmin(credentials);
+      const userProfile = await getUserProfile(firebaseUser.uid);
+      if (userProfile) {
+        setUser(userProfile);
+      }
+    } catch (error) {
+      throw error;
+    }
+  };
+
   const signOut = async () => {
     try {
       await signOutUser();
@@ -97,6 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     loading,
     signIn,
     signUp,
+    adminSignIn,
     signOut,
     resetPassword,
   };

@@ -13,7 +13,9 @@ export default function HomePage() {
     if (!loading) {
       if (user) {
         // Redirect based on user role
-        if (user.role === "doctor") {
+        if (user.role === "admin") {
+          router.push("/admin/dashboard");
+        } else if (user.role === "doctor") {
           router.push("/doctor/dashboard");
         } else if (user.role === "patient") {
           router.push("/patient/dashboard");

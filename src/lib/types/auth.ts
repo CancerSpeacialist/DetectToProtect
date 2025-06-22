@@ -41,6 +41,13 @@ export interface DoctorProfile extends User {
   isApproved: boolean
 }
 
+export interface AdminProfile extends User {
+  role: 'admin'
+  permissions: string[]
+  lastLogin?: Date
+  isSuperAdmin: boolean
+}
+
 // Separate interface for signup data that includes password
 export interface PatientSignUpData {
   email: string
@@ -51,11 +58,17 @@ export interface PatientSignUpData {
   phoneNumber?: string
 }
 
+export interface AdminSignInData {
+  email: string
+  password: string
+}
+
 export interface AuthContextType {
   user: User | null
   loading: boolean
   signIn: (email: string, password: string) => Promise<void>
   signUp: (userData: PatientSignUpData) => Promise<void>
+  adminSignIn: (credentials: AdminSignInData) => Promise<void>
   signOut: () => Promise<void>
   resetPassword: (email: string) => Promise<void>
 }

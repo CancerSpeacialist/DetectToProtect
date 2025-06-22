@@ -5,16 +5,16 @@
 // export default async function middleware(request: NextRequest) {
 //   // Use the auth() function to get the session
 //   const session = await auth()
-  
+
 //   // List of public paths that don't require authentication
 //   const publicPaths = ['/api/auth/signin', '/api/auth/error']
-//   const isPublicPath = publicPaths.some(path => 
+//   const isPublicPath = publicPaths.some(path =>
 //     request.nextUrl.pathname.startsWith(path)
 //   )
 
 //   // Auth-related paths that shouldn't be protected or redirected
 //   const authRelatedPaths = ['/api/auth']
-//   const isAuthPath = authRelatedPaths.some(path => 
+//   const isAuthPath = authRelatedPaths.some(path =>
 //     request.nextUrl.pathname.startsWith(path)
 //   )
 
@@ -53,34 +53,38 @@
 //   ],
 // }
 
-
-
-
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
+  const { pathname } = request.nextUrl;
 
   // Public routes that don't require authentication
   const publicRoutes = [
-    '/sign-in',
-    '/sign-up',
-    '/forgot-password',
-    '/'
-  ]
+    "/sign-in",
+    "/sign-up",
+    "/forgot-password",
+    "/",
+    "/admin/sign-in", // Admin sign-in is public but restricted
+  ];
 
   // Check if current path is public
-  const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
+  const isPublicRoute = publicRoutes.some((route) =>
+    pathname.startsWith(route)
+  );
+
+  // Admin routes (except sign-in)
+  const isAdminRoute =
+    pathname.startsWith("/admin") && pathname !== "/admin/sign-in";
 
   // If it's a public route, allow access
   if (isPublicRoute) {
-    return NextResponse.next()
+    return NextResponse.next();
   }
 
-  // For protected routes, the AuthProvider will handle redirects
-  // This middleware primarily handles static route protection
-  return NextResponse.next()
+  // For admin routes, the layout will handle authentication checks
+  // For other protected routes, the AuthProvider will handle redirects
+  return NextResponse.next();
 }
 
 export const config = {
@@ -92,7 +96,6 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      */
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
+    "/((?!api|_next/static|_next/image|favicon.ico).*)",
   ],
-}
-
+};
