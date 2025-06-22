@@ -1,4 +1,5 @@
-import { initializeApp } from "firebase/app";
+import { initializeApp, getApps } from "firebase/app";
+import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
@@ -8,11 +9,14 @@ const firebaseConfig = {
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGEBUCKET,
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGINGSENDERID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APPID,
-
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore();
+const app =
+  getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
-export { app, db };
+// Initialize Firebase services
+export const auth = getAuth(app);
+export const db = getFirestore(app);
+
+export default app;
