@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Loader2, Shield, Users, Settings, Database, LogOut } from 'lucide-react'
 import Link from 'next/link'
 
-export default function AdminLayout({
+export default function AdminProtectedLayout({
   children,
 }: {
   children: React.ReactNode
