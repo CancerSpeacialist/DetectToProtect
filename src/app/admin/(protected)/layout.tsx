@@ -1,39 +1,47 @@
-'use client'
+"use client";
 
-import { useAuth } from '@/lib/context/AuthContext'
-import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Loader2, Shield, Users, Settings, Database, LogOut } from 'lucide-react'
-import Link from 'next/link'
+import { useAuth } from "@/lib/context/AuthContext";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  Loader2,
+  Shield,
+  Users,
+  Settings,
+  Database,
+  LogOut,
+  UserCheck,
+} from "lucide-react";
+import Link from "next/link";
 
 export default function AdminProtectedLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
-  const { user, loading, signOut } = useAuth()
-  const router = useRouter()
+  const { user, loading, signOut } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push('/admin/sign-in')
-    } else if (!loading && user && user.role !== 'admin') {
-      router.push('/sign-in')
+      router.push("/admin/sign-in");
+    } else if (!loading && user && user.role !== "admin") {
+      router.push("/sign-in");
     }
-  }, [user, loading, router])
+  }, [user, loading, router]);
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin" />
       </div>
-    )
+    );
   }
 
-  if (!user || user.role !== 'admin') {
-    return null
+  if (!user || user.role !== "admin") {
+    return null;
   }
 
   return (
@@ -57,9 +65,9 @@ export default function AdminProtectedLayout({
               <span className="text-sm text-red-100">
                 Admin: {user.firstName} {user.lastName}
               </span>
-              <Button 
-                onClick={signOut} 
-                variant="outline" 
+              <Button
+                onClick={signOut}
+                variant="outline"
                 size="sm"
                 className="border-red-300 text-red-100 hover:bg-red-700"
               >
@@ -79,6 +87,12 @@ export default function AdminProtectedLayout({
               <Button variant="ghost" className="w-full justify-start">
                 <Database className="w-4 h-4 mr-2" />
                 Dashboard
+              </Button>
+            </Link>
+            <Link href="/admin/doctors">
+              <Button variant="ghost" className="w-full justify-start">
+                <UserCheck className="w-4 h-4 mr-2" />
+                Doctor Management
               </Button>
             </Link>
             <Link href="/admin/users">
@@ -104,5 +118,5 @@ export default function AdminProtectedLayout({
         </main>
       </div>
     </div>
-  )
+  );
 }

@@ -11,12 +11,18 @@ import {
   createUserProfile,
   createPatientProfile,
   createAdminProfile,
+  createDoctorProfile,
   getUserProfile,
   checkDoctorExists,
   checkAdminExists,
   updateAdminLastLogin,
 } from "./db";
-import { PatientSignUpData, UserRole, AdminSignInData } from "../types/auth";
+import {
+  PatientSignUpData,
+  UserRole,
+  AdminSignInData,
+  CreateDoctorData,
+} from "../types/auth";
 
 // Sign up new patient
 export async function signUpPatient(
@@ -63,6 +69,57 @@ export async function signUpPatient(
   } catch (error: any) {
     console.error("Error signing up patient:", error);
     throw new Error(error.message || "Failed to create account");
+  }
+}
+
+// Create doctor account by admin
+export async function createDoctorByAdmin(
+  doctorData: CreateDoctorData
+): Promise<FirebaseUser> {
+  try {
+    // Create Firebase user
+    const userCredential = await createUserWithEmailAndPassword(
+      auth,
+      doctorData.email,
+      doctorData.password
+    );
+
+    const user = userCredential.user;
+
+    // Update display name
+    await updateProfile(user, {
+      displayName: `Dr. ${doctorData.firstName} ${doctorData.lastName}`,
+    });
+
+    // Create user profile in Firestore
+    await createUserProfile(user.uid, {
+      email: doctorData.email,
+      firstName: doctorData.firstName,
+      lastName: doctorData.lastName,
+      role: "doctor",
+    });
+
+    // Create doctor profile with minimal data
+    await createDoctorProfile(user.uid, {
+      email: doctorData.email,
+      firstName: doctorData.firstName,
+      lastName: doctorData.lastName,
+      phoneNumber: doctorData.phoneNumber,
+      uid: user.uid,
+      role: "doctor",
+      isVerified: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      isApproved: false,
+      profileCompleted: false, // Doctor needs to complete profile
+      specialization: [],
+      qualifications: [],
+    });
+
+    return user;
+  } catch (error: any) {
+    console.error("Error creating doctor account:", error);
+    throw new Error(error.message || "Failed to create doctor account");
   }
 }
 

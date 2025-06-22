@@ -18,6 +18,7 @@ import {
   DoctorProfile,
   AdminProfile,
   UserRole,
+  CompleteDoctorProfileData,
 } from "../types/auth";
 
 // Collections
@@ -73,31 +74,6 @@ export async function createPatientProfile(
   } catch (error) {
     console.error("Error creating patient profile:", error);
     throw new Error("Failed to create patient profile");
-  }
-}
-
-// Create doctor profile (admin only)
-export async function createDoctorProfile(
-  uid: string,
-  doctorData: Partial<DoctorProfile>
-): Promise<void> {
-  try {
-    const doctorRef = doc(db, COLLECTIONS.DOCTORS, uid);
-    const timestamp = serverTimestamp();
-
-    await setDoc(doctorRef, {
-      ...doctorData,
-      uid,
-      role: "doctor" as UserRole,
-      createdAt: timestamp,
-      updatedAt: timestamp,
-      isApproved: doctorData.isApproved || false,
-      specialization: doctorData.specialization || [],
-      qualifications: doctorData.qualifications || [],
-    });
-  } catch (error) {
-    console.error("Error creating doctor profile:", error);
-    throw new Error("Failed to create doctor profile");
   }
 }
 
@@ -478,5 +454,89 @@ export async function rejectDoctorAccount(uid: string): Promise<void> {
   } catch (error) {
     console.error("Error rejecting doctor account:", error);
     throw new Error("Failed to reject doctor account");
+  }
+}
+
+
+export async function completeDoctorProfile(
+  uid: string,
+  profileData: CompleteDoctorProfileData
+): Promise<void> {
+  try {
+    const doctorRef = doc(db, COLLECTIONS.DOCTORS, uid)
+    const timestamp = serverTimestamp()
+    
+    await updateDoc(doctorRef, {
+      ...profileData,
+      profileCompleted: true,
+      updatedAt: timestamp
+    })
+    
+    // Also update the user profile to mark as verified
+    const userRef = doc(db, COLLECTIONS.USERS, uid)
+    await updateDoc(userRef, {
+      isVerified: true,
+      updatedAt: timestamp
+    })
+  } catch (error) {
+    console.error('Error completing doctor profile:', error)
+    throw new Error('Failed to complete doctor profile')
+  }
+}
+
+
+// Create doctor profile (admin only)
+export async function createDoctorProfile(
+  uid: string,
+  doctorData: Partial<DoctorProfile>
+): Promise<void> {
+  try {
+    const doctorRef = doc(db, COLLECTIONS.DOCTORS, uid)
+    const timestamp = serverTimestamp()
+    
+    await setDoc(doctorRef, {
+      ...doctorData,
+      uid,
+      role: 'doctor' as UserRole,
+      createdAt: timestamp,
+      updatedAt: timestamp,
+      isApproved: doctorData.isApproved || false,
+      profileCompleted: doctorData.profileCompleted || false,
+      specialization: doctorData.specialization || [],
+      qualifications: doctorData.qualifications || [],
+      experience: doctorData.experience || 0
+    })
+  } catch (error) {
+    console.error('Error creating doctor profile:', error)
+    throw new Error('Failed to create doctor profile')
+  }
+}
+
+// Get incomplete doctor profiles (for admin dashboard)
+export async function getIncompleteDoctorProfiles(): Promise<DoctorProfile[]> {
+  try {
+    const doctorsRef = collection(db, COLLECTIONS.DOCTORS)
+    const q = query(doctorsRef, where('profileCompleted', '==', false))
+    const querySnapshot = await getDocs(q)
+    
+    const incompleteDoctors: DoctorProfile[] = []
+    querySnapshot.forEach((doc) => {
+      const data = doc.data()
+      incompleteDoctors.push({
+        ...data,
+        createdAt: data.createdAt?.toDate() || new Date(),
+        updatedAt: data.updatedAt?.toDate() || new Date(),
+        specialization: data.specialization || [],
+        qualifications: data.qualifications || [],
+        isApproved: data.isApproved || false,
+        profileCompleted: data.profileCompleted || false,
+        experience: data.experience || 0
+      } as DoctorProfile)
+    })
+    
+    return incompleteDoctors
+  } catch (error) {
+    console.error('Error getting incomplete doctor profiles:', error)
+    return []
   }
 }
