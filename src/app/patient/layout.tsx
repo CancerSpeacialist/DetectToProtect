@@ -1,10 +1,11 @@
+// src/app/patient/layout.tsx
 "use client";
 
 import { useAuth } from "@/lib/context/AuthContext";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import PatientNavbar from "@/components/patient/PatientNavbar";
 
 export default function PatientLayout({
   children,
@@ -17,10 +18,8 @@ export default function PatientLayout({
   useEffect(() => {
     if (!loading) {
       if (!user) {
-        // Not authenticated, redirect to sign in
         router.push("/sign-in");
       } else if (user.role !== "patient") {
-        // Wrong role, redirect to appropriate dashboard
         switch (user.role) {
           case "doctor":
             router.push("/doctor/dashboard");
@@ -48,25 +47,9 @@ export default function PatientLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <h1 className="text-xl font-semibold">Detect to Protect</h1>
-            <div className="flex items-center gap-4">
-              <span className="text-sm text-gray-600">
-                Welcome, {user.firstName}
-              </span>
-              <Button onClick={signOut} variant="outline" size="sm">
-                Sign Out
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {children}
-      </main>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50/50 to-indigo-50/50">
+      <PatientNavbar />
+      <main className="pt-16">{children}</main>
     </div>
   );
 }
