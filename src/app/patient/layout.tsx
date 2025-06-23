@@ -1,37 +1,50 @@
-'use client'
+"use client";
 
-import { useAuth } from '@/lib/context/AuthContext'
-import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
-import { Button } from '@/components/ui/button'
-import { Loader2 } from 'lucide-react'
+import { useAuth } from "@/lib/context/AuthContext";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 
 export default function PatientLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
-  const { user, loading, signOut } = useAuth()
-  const router = useRouter()
+  const { user, loading, signOut } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.push('/sign-in')
-    } else if (!loading && user && user.role !== 'patient') {
-      router.push('/doctor/dashboard')
+    if (!loading) {
+      if (!user) {
+        // Not authenticated, redirect to sign in
+        router.push("/sign-in");
+      } else if (user.role !== "patient") {
+        // Wrong role, redirect to appropriate dashboard
+        switch (user.role) {
+          case "doctor":
+            router.push("/doctor/dashboard");
+            break;
+          // case "admin":
+          //   router.push("/admin/dashboard");
+          //   break;
+          default:
+            router.push("/sign-in");
+        }
+      }
     }
-  }, [user, loading, router])
+  }, [user, loading, router]);
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin" />
       </div>
-    )
+    );
   }
 
-  if (!user || user.role !== 'patient') {
-    return null
+  if (!user || user.role !== "patient") {
+    return null;
   }
 
   return (
@@ -55,5 +68,5 @@ export default function PatientLayout({
         {children}
       </main>
     </div>
-  )
+  );
 }
