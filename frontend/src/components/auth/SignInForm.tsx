@@ -48,7 +48,7 @@ export default function SignInForm() {
       )
       
       // This will be handled by the middleware redirect
-      router.push('/dashboard')
+      router.push('/patient/dashboard')
       
     } catch (error: any) {
       setError(error.message || 'Failed to sign in')

@@ -2,13 +2,14 @@
 
 import { useAuth } from '@/lib/context/AuthContext'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { DashboardHome } from '@/components/dashboard/DashboardHome'
 
 export default function DoctorDashboard() {
   const { user } = useAuth()
 
   return (
     <div className="space-y-6">
-      <div>
+      {/* <div>
         <h1 className="text-3xl font-bold">
           Welcome, Dr. {user?.lastName}! 👩‍⚕️
         </h1>
@@ -45,7 +46,8 @@ export default function DoctorDashboard() {
             <p className="text-sm text-gray-600">Scans analyzed</p>
           </CardContent>
         </Card>
-      </div>
+      </div> */}
+      <DashboardHome />
     </div>
   )
 }
