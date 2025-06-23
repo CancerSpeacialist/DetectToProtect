@@ -12,17 +12,22 @@ export default function HomePage() {
   useEffect(() => {
     if (!loading) {
       if (user) {
-        // Redirect based on user role
-        if (user.role === "admin") {
-          router.push("/admin/dashboard");
-        } else if (user.role === "doctor") {
-          router.push("/doctor/dashboard");
-        } else if (user.role === "patient") {
-          router.push("/patient/dashboard");
-        } else {
-          router.push("/sign-in");
+        // User is authenticated, redirect to appropriate dashboard
+        switch (user.role) {
+          case "patient":
+            router.push("/patient/dashboard");
+            break;
+          case "doctor":
+            router.push("/doctor/dashboard");
+            break;
+          // case "admin":
+          //   router.push("/admin/dashboard");
+          //   break;
+          default:
+            router.push("/sign-in");
         }
       } else {
+        // User not authenticated, show landing page or redirect to sign in
         router.push("/sign-in");
       }
     }
