@@ -75,7 +75,7 @@ export function useCancerScreening(cancerType) {
       const formData = new FormData();
       formData.append("file", selectedFile);
       formData.append("cancerType", cancerType);
-      formData.append("patientId", user.uid);
+      formData.append("doctorId", user.uid);
 
       const uploadResponse = await fetch("/api/upload", {
         method: "POST",

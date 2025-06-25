@@ -1,12 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { v2 as cloudinary } from "cloudinary";
-
-// Configure Cloudinary
-cloudinary.config({
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-  api_key: process.env.CLOUDINARY_API_KEY,
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-});
+import { NextResponse } from "next/server";
+import { uploadScreeningImageToCloudinary } from "@/lib/cloudinary";
 
 export async function POST(request) {
   try {
@@ -22,25 +15,13 @@ export async function POST(request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Upload to Cloudinary
-    const uploadResponse = await new Promise((resolve, reject) => {
-      cloudinary.uploader
-        .upload_stream(
-          {
-            resource_type: "auto",
-            folder: `ct-scans/${cancerType}`,
-            public_id: `${Date.now()}-${file.name.split(".")[0]}`,
-            tags: ["ct-scan", cancerType, "medical-imaging"],
-          },
-          (error, result) => {
-            if (error) reject(error);
-            else resolve(result);
-          }
-        )
-        .end(buffer);
+    // Upload to Cloudinary (moved to lib)
+    const result = await uploadScreeningImageToCloudinary({
+      buffer,
+      fileName: file.name,
+      cancerType,
+      file,
     });
-
-    const result = uploadResponse;
 
     // Store metadata in Firebase (we'll create this function next)
     const metadata = {
