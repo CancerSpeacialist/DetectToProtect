@@ -7,12 +7,11 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Users, UserCheck, UserX, Activity, Database, Settings } from 'lucide-react'
 import { getAllPatients, getAllDoctors } from '@/lib/firebase/db'
-import { PatientProfile, DoctorProfile } from '@/lib/types/auth'
 
 export default function AdminDashboard() {
   const { user } = useAuth()
-  const [patients, setPatients] = useState<PatientProfile[]>([])
-  const [doctors, setDoctors] = useState<DoctorProfile[]>([])
+  const [patients, setPatients] = useState([])
+  const [doctors, setDoctors] = useState([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {

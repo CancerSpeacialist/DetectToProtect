@@ -17,7 +17,6 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, UserPlus } from "lucide-react";
 import { createDoctorByAdmin } from "@/lib/firebase/auth";
-import { CreateDoctorData } from "@/lib/types/auth";
 
 const createDoctorSchema = z
   .object({
@@ -33,13 +32,8 @@ const createDoctorSchema = z
     path: ["confirmPassword"],
   });
 
-type CreateDoctorFormData = z.infer<typeof createDoctorSchema>;
 
-interface CreateDoctorFormProps {
-  onSuccess?: () => void;
-}
-
-export default function CreateDoctorForm({ onSuccess }: CreateDoctorFormProps) {
+export default function CreateDoctorForm({ onSuccess }) {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
@@ -49,17 +43,17 @@ export default function CreateDoctorForm({ onSuccess }: CreateDoctorFormProps) {
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<CreateDoctorFormData>({
+  } = useForm({
     resolver: zodResolver(createDoctorSchema),
   });
 
-  const onSubmit = async (data: CreateDoctorFormData) => {
+  const onSubmit = async (data) => {
     try {
       setError("");
       setSuccess("");
       setLoading(true);
 
-      const doctorData: CreateDoctorData = {
+      const doctorData = {
         firstName: data.firstName,
         lastName: data.lastName,
         email: data.email,
@@ -74,7 +68,7 @@ export default function CreateDoctorForm({ onSuccess }: CreateDoctorFormProps) {
       );
       reset();
       onSuccess?.();
-    } catch (error: any) {
+    } catch (error) {
       setError(error.message || "Failed to create doctor account");
     } finally {
       setLoading(false);

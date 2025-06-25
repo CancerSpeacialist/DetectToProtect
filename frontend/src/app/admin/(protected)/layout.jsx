@@ -16,11 +16,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-export default function AdminProtectedLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function AdminProtectedLayout({ children }) {
   const { user, loading, signOut } = useAuth();
   const router = useRouter();
 
