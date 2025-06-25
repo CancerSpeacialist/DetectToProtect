@@ -2,7 +2,7 @@
 
 import { useAuth } from '@/lib/context/AuthContext'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { DashboardHome } from '@/components/dashboard/DashboardHome'
+import { DashboardHome } from '@/components/doctor/dashboard/DashboardHome'
 
 export default function DoctorDashboard() {
   const { user } = useAuth()

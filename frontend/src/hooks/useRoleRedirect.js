@@ -11,7 +11,7 @@ const ROLE_REDIRECTS = {
 };
 
 export function useRoleRedirect(redirectTo = null, options = {}) {
-  const { user, loading } = useAuth();
+  const { user, loading , signOut} = useAuth();
   const router = useRouter();
   const [redirecting, setRedirecting] = useState(false);
 
@@ -56,5 +56,5 @@ export function useRoleRedirect(redirectTo = null, options = {}) {
     }
   }, [user, loading, router, redirectTo, delay, fallback]);
 
-  return { user, loading, redirecting };
+  return { user, loading, redirecting, signOut };
 }
