@@ -1,44 +1,54 @@
-
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Stethoscope, Save } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export function DiagnosisInput() {
-  const [selectedPatient, setSelectedPatient] = useState('');
-  const [notes, setNotes] = useState('');
-  const { toast } = useToast();
+  const [selectedPatient, setSelectedPatient] = useState("");
+  const [notes, setNotes] = useState("");
 
   const patients = [
-    { id: 'P001', name: 'John Doe' },
-    { id: 'P002', name: 'Sarah Wilson' },
-    { id: 'P003', name: 'Mike Johnson' },
-    { id: 'P004', name: 'Emma Davis' },
-    { id: 'P005', name: 'Robert Brown' },
+    { id: "P001", name: "John Doe" },
+    { id: "P002", name: "Sarah Wilson" },
+    { id: "P003", name: "Mike Johnson" },
+    { id: "P004", name: "Emma Davis" },
+    { id: "P005", name: "Robert Brown" },
   ];
 
   const handleSave = () => {
     if (!selectedPatient || !notes.trim()) {
-      toast({
-        title: "Missing Information",
+      toast("Missing Information", {
         description: "Please select a patient and add diagnosis notes.",
-        variant: "destructive",
+        action: {
+          label: "Close",
+          onClick: () => console.log("Close"),
+        },
       });
       return;
     }
 
-    toast({
-      title: "Diagnosis Saved",
-      description: "The diagnosis has been successfully saved to the patient's record.",
+    toast("Diagnosis Saved", {
+      description:
+        "The diagnosis has been successfully saved to the patient's record.",
+      action: {
+        label: "Close",
+        onClick: () => console.log("Close"),
+      },
     });
 
     // Reset form
-    setSelectedPatient('');
-    setNotes('');
+    setSelectedPatient("");
+    setNotes("");
   };
 
   return (
@@ -57,7 +67,10 @@ export function DiagnosisInput() {
             <CardContent className="space-y-6">
               <div className="space-y-2">
                 <Label htmlFor="patient-select">Select Patient</Label>
-                <Select value={selectedPatient} onValueChange={setSelectedPatient}>
+                <Select
+                  value={selectedPatient}
+                  onValueChange={setSelectedPatient}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Choose a patient..." />
                   </SelectTrigger>
@@ -72,7 +85,9 @@ export function DiagnosisInput() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="diagnosis-notes">Doctor's Notes & Diagnosis</Label>
+                <Label htmlFor="diagnosis-notes">
+                  Doctor's Notes & Diagnosis
+                </Label>
                 <Textarea
                   id="diagnosis-notes"
                   placeholder="Enter your diagnosis, observations, treatment plan, and recommendations..."
@@ -86,13 +101,14 @@ export function DiagnosisInput() {
               </div>
 
               <div className="flex gap-3">
-                <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700 gap-2">
+                <Button
+                  onClick={handleSave}
+                  className="bg-blue-600 hover:bg-blue-700 gap-2"
+                >
                   <Save className="w-4 h-4" />
                   Save Diagnosis
                 </Button>
-                <Button variant="outline">
-                  Save as Draft
-                </Button>
+                <Button variant="outline">Save as Draft</Button>
               </div>
             </CardContent>
           </Card>
@@ -107,7 +123,9 @@ export function DiagnosisInput() {
               <Button
                 variant="outline"
                 className="w-full justify-start text-left"
-                onClick={() => setNotes("Patient presents with symptoms consistent with...")}
+                onClick={() =>
+                  setNotes("Patient presents with symptoms consistent with...")
+                }
               >
                 General Consultation
               </Button>
@@ -121,7 +139,9 @@ export function DiagnosisInput() {
               <Button
                 variant="outline"
                 className="w-full justify-start text-left"
-                onClick={() => setNotes("Preventive care assessment indicates...")}
+                onClick={() =>
+                  setNotes("Preventive care assessment indicates...")
+                }
               >
                 Preventive Care
               </Button>
@@ -137,7 +157,9 @@ export function DiagnosisInput() {
                 <div className="space-y-3 text-sm">
                   <div>
                     <span className="font-medium">Last Visit:</span>
-                    <p className="text-gray-600">Jan 15, 2024 - Routine checkup</p>
+                    <p className="text-gray-600">
+                      Jan 15, 2024 - Routine checkup
+                    </p>
                   </div>
                   <div>
                     <span className="font-medium">Allergies:</span>
@@ -145,7 +167,9 @@ export function DiagnosisInput() {
                   </div>
                   <div>
                     <span className="font-medium">Current Medications:</span>
-                    <p className="text-gray-600">Lisinopril 10mg, Metformin 500mg</p>
+                    <p className="text-gray-600">
+                      Lisinopril 10mg, Metformin 500mg
+                    </p>
                   </div>
                 </div>
               </CardContent>
