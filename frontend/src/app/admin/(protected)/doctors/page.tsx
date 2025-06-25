@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { UserPlus, UserCheck, UserX, Clock } from 'lucide-react'
-import { getAllDoctors, getIncompleteDoctorProfiles, approveDoctorAccount, rejectDoctorAccount } from '@/lib/firebase/db'
+import { getAllDoctors, getAllIncompleteDoctorProfiles, approveDoctorAccount, rejectDoctorAccount } from '@/lib/firebase/db'
 import { DoctorProfile } from '@/lib/types/auth'
 import CreateDoctorForm from '@/components/admin/CreateDoctorForm'
 
@@ -21,7 +21,7 @@ export default function AdminDoctorsPage() {
       try {
         const [allDoctors, incompleteProfiles] = await Promise.all([
           getAllDoctors(),
-          getIncompleteDoctorProfiles()
+          getAllIncompleteDoctorProfiles()
         ])
         setDoctors(allDoctors)
         setIncompleteDoctors(incompleteProfiles)

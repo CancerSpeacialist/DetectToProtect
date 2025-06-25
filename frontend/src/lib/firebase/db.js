@@ -107,77 +107,77 @@ export async function getUserProfile(uid) {
   }
 }
 
-// Get detailed profile based on role with proper type handling
-export async function getDetailedProfile(uid, role) {
-  try {
-    let collectionName;
-    switch (role) {
-      case "patient":
-        collectionName = COLLECTIONS.PATIENTS;
-        break;
-      case "doctor":
-        collectionName = COLLECTIONS.DOCTORS;
-        break;
-      case "admin":
-        collectionName = COLLECTIONS.ADMINS;
-        break;
-      default:
-        return null;
-    }
+// Get detailed profile based on role with proper type handling    NOT USED ANYWHERE
+// export async function getDetailedProfile(uid, role) {
+//   try {
+//     let collectionName;
+//     switch (role) {
+//       case "patient":
+//         collectionName = COLLECTIONS.PATIENTS;
+//         break;
+//       case "doctor":
+//         collectionName = COLLECTIONS.DOCTORS;
+//         break;
+//       case "admin":
+//         collectionName = COLLECTIONS.ADMINS;
+//         break;
+//       default:
+//         return null;
+//     }
 
-    const profileRef = doc(db, collectionName, uid);
-    const profileSnap = await getDoc(profileRef);
+//     const profileRef = doc(db, collectionName, uid);
+//     const profileSnap = await getDoc(profileRef);
 
-    if (profileSnap.exists()) {
-      const profileData = profileSnap.data();
+//     if (profileSnap.exists()) {
+//       const profileData = profileSnap.data();
 
-      // Convert Firestore timestamps to dates
-      const baseProfile = {
-        ...profileData,
-        createdAt: profileData.createdAt?.toDate() || new Date(),
-        updatedAt: profileData.updatedAt?.toDate() || new Date(),
-      };
+//       // Convert Firestore timestamps to dates
+//       const baseProfile = {
+//         ...profileData,
+//         createdAt: profileData.createdAt?.toDate() || new Date(),
+//         updatedAt: profileData.updatedAt?.toDate() || new Date(),
+//       };
 
-      // Handle role-specific type conversions
-      switch (role) {
-        case "patient":
-          return {
-            ...baseProfile,
-            dateOfBirth: profileData.dateOfBirth?.toDate() || undefined,
-            medicalHistory: profileData.medicalHistory || [],
-            allergies: profileData.allergies || [],
-          };
+//       // Handle role-specific type conversions
+//       switch (role) {
+//         case "patient":
+//           return {
+//             ...baseProfile,
+//             dateOfBirth: profileData.dateOfBirth?.toDate() || undefined,
+//             // medicalHistory: profileData.medicalHistory || [],
+//             // allergies: profileData.allergies || [],
+//           };
 
-        case "doctor":
-          return {
-            ...baseProfile,
-            specialization: profileData.specialization || [],
-            qualifications: profileData.qualifications || [],
-            isApproved: profileData.isApproved || false,
-            experience: profileData.experience || 0,
-            licenseNumber: profileData.licenseNumber || "",
-            hospital: profileData.hospital || "",
-          };
+//         case "doctor":
+//           return {
+//             ...baseProfile,
+//             specialization: profileData.specialization || [],
+//             qualifications: profileData.qualifications || [],
+//             isApproved: profileData.isApproved || false,
+//             experience: profileData.experience || 0,
+//             licenseNumber: profileData.licenseNumber || "",
+//             hospital: profileData.hospital || "",
+//           };
 
-        case "admin":
-          return {
-            ...baseProfile,
-            permissions: profileData.permissions || ["read"],
-            isSuperAdmin: profileData.isSuperAdmin || false,
-            lastLogin: profileData.lastLogin?.toDate() || undefined,
-          };
+//         case "admin":
+//           return {
+//             ...baseProfile,
+//             permissions: profileData.permissions || ["read"],
+//             isSuperAdmin: profileData.isSuperAdmin || false,
+//             lastLogin: profileData.lastLogin?.toDate() || undefined,
+//           };
 
-        default:
-          return null;
-      }
-    }
+//         default:
+//           return null;
+//       }
+//     }
 
-    return null;
-  } catch (error) {
-    console.error("Error getting detailed profile:", error);
-    return null;
-  }
-}
+//     return null;
+//   } catch (error) {
+//     console.error("Error getting detailed profile:", error);
+//     return null;
+//   }
+// }
 
 // Get patient profile specifically
 export async function getPatientProfile(uid) {
@@ -192,8 +192,8 @@ export async function getPatientProfile(uid) {
         createdAt: profileData.createdAt?.toDate() || new Date(),
         updatedAt: profileData.updatedAt?.toDate() || new Date(),
         dateOfBirth: profileData.dateOfBirth?.toDate() || undefined,
-        medicalHistory: profileData.medicalHistory || [],
-        allergies: profileData.allergies || [],
+        // medicalHistory: profileData.medicalHistory || [],
+        // allergies: profileData.allergies || [],
       };
     }
 
@@ -328,8 +328,8 @@ export async function getAllPatients() {
         createdAt: data.createdAt?.toDate() || new Date(),
         updatedAt: data.updatedAt?.toDate() || new Date(),
         dateOfBirth: data.dateOfBirth?.toDate() || undefined,
-        medicalHistory: data.medicalHistory || [],
-        allergies: data.allergies || [],
+        // medicalHistory: data.medicalHistory || [],
+        // allergies: data.allergies || [],
       });
     });
 
@@ -441,12 +441,6 @@ export async function completeDoctorProfile(uid, profileData) {
       updatedAt: timestamp,
     });
 
-    // Also update the user profile to mark as verified
-    const userRef = doc(db, COLLECTIONS.USERS, uid);
-    await updateDoc(userRef, {
-      isVerified: true,
-      updatedAt: timestamp,
-    });
   } catch (error) {
     console.error("Error completing doctor profile:", error);
     throw new Error("Failed to complete doctor profile");
@@ -478,7 +472,7 @@ export async function createDoctorProfile(uid, doctorData) {
 }
 
 // Get incomplete doctor profiles (for admin dashboard)
-export async function getIncompleteDoctorProfiles() {
+export async function getAllIncompleteDoctorProfiles() {
   try {
     const doctorsRef = collection(db, COLLECTIONS.DOCTORS);
     const q = query(doctorsRef, where("profileCompleted", "==", false));

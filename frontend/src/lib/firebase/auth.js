@@ -50,10 +50,7 @@ export async function signUpPatient(userData) {
       dateOfBirth: userData.dateOfBirth,
       phoneNumber: userData.phoneNumber,
       uid: user.uid,
-      role: "patient",
       isVerified: false,
-      createdAt: new Date(),
-      updatedAt: new Date(),
     });
 
     return user;
@@ -222,10 +219,7 @@ export async function createAdminAccount(
       firstName,
       lastName,
       uid: user.uid,
-      role: "admin",
       isVerified: true,
-      createdAt: new Date(),
-      updatedAt: new Date(),
       permissions: ["read", "write", "delete", "manage_users"],
       isSuperAdmin,
     });
