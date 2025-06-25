@@ -44,61 +44,7 @@ import {
   FileText,
   Phone,
 } from "lucide-react";
-
-import Link from "next/link"; // For client-side navigation
-
-// List of cancer types displayed in the dropdown under "Cancer Screening"
-const cancerTypes = [
-  {
-    id: "brain-tumor",
-    name: "Brain Tumor/Cancer",
-    icon: "🧠",
-    description: "MRI/CT scan analysis",
-    color: "bg-purple-100 text-purple-800",
-  },
-  {
-    id: "breast-cancer",
-    name: "Breast Cancer",
-    icon: "🎗️",
-    description: "Mammography screening",
-    color: "bg-pink-100 text-pink-800",
-  },
-  {
-    id: "prostate-cancer",
-    name: "Prostate Cancer",
-    icon: "🔵",
-    description: "PSA & imaging analysis",
-    color: "bg-blue-100 text-blue-800",
-  },
-  {
-    id: "pancreatic-cancer",
-    name: "Pancreatic Cancer",
-    icon: "🟡",
-    description: "CT/MRI scan evaluation",
-    color: "bg-yellow-100 text-yellow-800",
-  },
-  {
-    id: "liver-cancer",
-    name: "Liver Cancer",
-    icon: "🟤",
-    description: "Hepatic imaging analysis",
-    color: "bg-orange-100 text-orange-800",
-  },
-  {
-    id: "esophagus-cancer",
-    name: "Esophagus Cancer",
-    icon: "🔴",
-    description: "Endoscopy & imaging",
-    color: "bg-red-100 text-red-800",
-  },
-  {
-    id: "lung-cancer",
-    name: "Lung Cancer",
-    icon: "🫁",
-    description: "Chest X-ray & CT analysis",
-    color: "bg-green-100 text-green-800",
-  },
-];
+import Link from "next/link"; 
 
 export default function PatientNavbar() {
   // Extract user info and logout method from auth context
@@ -149,7 +95,7 @@ export default function PatientNavbar() {
                 </NavigationMenuItem>
 
                 {/* Cancer Screening Dropdown */}
-                <NavigationMenuItem>
+                {/* <NavigationMenuItem>
                   <NavigationMenuTrigger className="flex items-center">
                     <Activity className="w-4 h-4 mr-2" />
                     Cancer Screening
@@ -177,7 +123,7 @@ export default function PatientNavbar() {
                       ))}
                     </div>
                   </NavigationMenuContent>
-                </NavigationMenuItem>
+                </NavigationMenuItem> */}
 
                 {/* Appointments Link */}
                 <NavigationMenuItem>
