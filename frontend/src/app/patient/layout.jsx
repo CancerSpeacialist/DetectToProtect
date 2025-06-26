@@ -7,7 +7,7 @@ import { useRoleRedirect } from "@/hooks/useRoleRedirect";
 import Loader from "@/components/ui/Loader";
 
 export default function PatientLayout({ children }) {
-   const { user, loading, redirecting } = useRoleRedirect(null, {
+   const { user, loading } = useRoleRedirect("patient", {
     delay: 500,
     fallback: "/sign-in",
   });

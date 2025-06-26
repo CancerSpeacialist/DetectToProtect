@@ -1,24 +1,24 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/lib/context/AuthContext';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/context/AuthContext";
 
 const ROLE_REDIRECTS = {
-  patient: '/patient/dashboard',
-  doctor: '/doctor/dashboard',
-  admin: '/admin/dashboard',
+  patient: "/patient/dashboard",
+  doctor: "/doctor/dashboard",
+  admin: "/admin/dashboard",
 };
 
-export function useRoleRedirect(redirectTo = null, options = {}) {
-  const { user, loading , signOut} = useAuth();
+export function useRoleRedirect(requireRole = null, options = {}) {
+  const { user, loading, signOut } = useAuth();
   const router = useRouter();
   const [redirecting, setRedirecting] = useState(false);
 
   // Default options
   const {
-    delay = 0,          
-    fallback = '/sign-in' // Fallback route
+    delay = 0,
+    fallback = "/sign-in", // Fallback route
   } = options;
 
   useEffect(() => {
@@ -31,15 +31,18 @@ export function useRoleRedirect(redirectTo = null, options = {}) {
       }
 
       const executeRedirect = () => {
-        // If specific redirect is provided, use it
-        if (redirectTo) {
-          router.push(redirectTo);
+        // If requireRole is "redirectByRole", redirect any authenticated user to their dashboard
+        if (requireRole === "redirectByRole") {
+          const defaultRedirect = ROLE_REDIRECTS[user.role] || fallback;
+          router.push(defaultRedirect);
           return;
         }
 
-        // Otherwise, redirect based on role
-        const defaultRedirect = ROLE_REDIRECTS[user.role] || fallback;
-        router.push(defaultRedirect);
+        if (requireRole && user.role !== requireRole) {
+          const defaultRedirect = ROLE_REDIRECTS[user.role] || fallback;
+          router.push(defaultRedirect);
+          return;
+        }
       };
 
       // Apply delay if specified, otherwise redirect immediately
@@ -49,12 +52,12 @@ export function useRoleRedirect(redirectTo = null, options = {}) {
       } else {
         executeRedirect();
       }
-    }
-    else {
+    } else {
       // If no user, redirect to fallback route
       router.push(fallback);
+      return;
     }
-  }, [user, loading, router, redirectTo, delay, fallback]);
+  }, [user, loading, router, delay, requireRole, fallback]);
 
   return { user, loading, redirecting, signOut };
 }

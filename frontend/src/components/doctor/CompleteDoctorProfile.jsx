@@ -18,6 +18,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, UserCheck, X } from "lucide-react";
 import { completeDoctorProfile } from "@/lib/firebase/db";
+import cancerTypes from "@/cancerTypes";
 
 // Fixed schema - removed the string fields for specializations and qualifications
 // since we handle them as arrays separately
@@ -49,7 +50,7 @@ export default function CompleteDoctorProfile({ doctorUid, onSuccess }) {
   const [qualifications, setQualifications] = useState([]);
   const [currentSpec, setCurrentSpec] = useState("");
   const [currentQual, setCurrentQual] = useState("");
-
+  const [cancerSpecializations, setCancerSpecializations] = useState([]);
   const {
     register,
     handleSubmit,
@@ -94,6 +95,11 @@ export default function CompleteDoctorProfile({ doctorUid, onSuccess }) {
         setError("Please add at least one qualification");
         return;
       }
+      
+      if (cancerSpecializations.length === 0) {
+        setError("Please select at least one cancer specialization");
+        return;
+      }
 
       const profileData = {
         licenseNumber: data.licenseNumber,
@@ -104,6 +110,7 @@ export default function CompleteDoctorProfile({ doctorUid, onSuccess }) {
         phoneNumber: data.phoneNumber || undefined,
         address: data.address || undefined,
         consultationFee: data.consultationFee || undefined,
+        cancerSpecializations,
       };
 
       await completeDoctorProfile(doctorUid, profileData);
@@ -237,6 +244,38 @@ export default function CompleteDoctorProfile({ doctorUid, onSuccess }) {
                     {...register("address")}
                   />
                 </div>
+              </div>
+
+              {/* Cancer Specializations */}
+              <div className="space-y-4">
+                <Label>Cancer Specializations *</Label>
+                <div className="flex flex-wrap gap-2">
+                  {cancerTypes.map((type) => (
+                    <Badge
+                      key={type.id}
+                      variant={
+                        cancerSpecializations.includes(type.id)
+                          ? "default"
+                          : "secondary"
+                      }
+                      className="cursor-pointer"
+                      onClick={() => {
+                        setCancerSpecializations((prev) =>
+                          prev.includes(type.id)
+                            ? prev.filter((id) => id !== type.id)
+                            : [...prev, type.id]
+                        );
+                      }}
+                    >
+                      {type.icon} {type.name}
+                    </Badge>
+                  ))}
+                </div>
+                {cancerSpecializations.length === 0 && (
+                  <p className="text-sm text-gray-500">
+                    Please select at least one cancer specialization
+                  </p>
+                )}
               </div>
 
               {/* Specializations */}

@@ -10,7 +10,7 @@ import DoctorApprovalPending from "@/components/doctor/DoctorApprovalPending";
 import Loader from "../ui/Loader";
 
 export default function DoctorLayoutClient({ children }) {
-  const { user, loading, signOut } = useRoleRedirect(null, {
+  const { user, loading, signOut } = useRoleRedirect("doctor", {
     delay: 500, // Delay for 500ms before redirecting
     fallback: "/sign-in",
   });
@@ -46,29 +46,29 @@ export default function DoctorLayoutClient({ children }) {
   return (
     <>
       {/* Fixed Header */}
-    <div className="fixed top-0 left-0 right-0 z-40">
-      <DoctorHeader
-        user={user}
-        doctorProfile={doctorProfile}
-        onMenuClick={() => setSidebarOpen(!sidebarOpen)}
-        signOut={signOut}
-      />
-    </div>
-    <div className="flex min-h-screen bg-gray-50 pt-16"> {/* pt-16 for header height */}
-      {/* Fixed Sidebar */}
-      <div className="fixed top-16 left-0 h-[calc(100vh-4rem)] z-30">
-        <DoctorSidebar
+      <div className="fixed top-0 left-0 right-0 z-40">
+        <DoctorHeader
           user={user}
           doctorProfile={doctorProfile}
-          isOpen={sidebarOpen}
-          onToggle={() => setSidebarOpen(!sidebarOpen)}
+          onMenuClick={() => setSidebarOpen(!sidebarOpen)}
+          signOut={signOut}
         />
       </div>
-      {/* Main Content */}
-      <main className="flex-1 ml-64 p-6 overflow-auto">
-        {children}
-      </main>
-    </div>
-  </>
+      <div className="flex min-h-screen bg-gray-50 pt-16">
+        {" "}
+        {/* pt-16 for header height */}
+        {/* Fixed Sidebar */}
+        <div className="fixed top-16 left-0 h-[calc(100vh-4rem)] z-30">
+          <DoctorSidebar
+            user={user}
+            doctorProfile={doctorProfile}
+            isOpen={sidebarOpen}
+            onToggle={() => setSidebarOpen(!sidebarOpen)}
+          />
+        </div>
+        {/* Main Content */}
+        <main className="flex-1 ml-64 p-6 overflow-auto">{children}</main>
+      </div>
+    </>
   );
 }

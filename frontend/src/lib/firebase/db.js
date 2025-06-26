@@ -10,6 +10,7 @@ import {
   addDoc,
   serverTimestamp,
   Timestamp,
+  arrayUnion,
 } from "firebase/firestore";
 import { db } from "./config";
 
@@ -180,6 +181,7 @@ export async function getUserProfile(uid) {
 // }
 
 // Get patient profile specifically
+
 export async function getPatientProfile(uid) {
   try {
     const patientRef = doc(db, COLLECTIONS.PATIENTS, uid);
@@ -440,7 +442,6 @@ export async function completeDoctorProfile(uid, profileData) {
       profileCompleted: true,
       updatedAt: timestamp,
     });
-
   } catch (error) {
     console.error("Error completing doctor profile:", error);
     throw new Error("Failed to complete doctor profile");
@@ -498,4 +499,46 @@ export async function getAllIncompleteDoctorProfiles() {
     console.error("Error getting incomplete doctor profiles:", error);
     return [];
   }
+}
+
+// Book an appointment and update references in patient & doctor docs
+export async function bookAppointment(appointmentData) {
+  // 1. Add appointment and get the doc ref
+  const docRef = await addDoc(collection(db, COLLECTIONS.APPOINTMENTS), {
+    ...appointmentData,
+    requestedDate: serverTimestamp(),
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  });
+
+  // 2. Update the appointment with its own ID
+  await updateDoc(docRef, { appointmentId: docRef.id });
+
+  // 3. Add appointmentId to patient's appointments array
+  const patientRef = doc(db, COLLECTIONS.PATIENTS, appointmentData.patientId);
+  await updateDoc(patientRef, {
+    appointments: arrayUnion(docRef.id),
+  });
+
+  // 4. Add appointmentId to doctor's appointments array
+  const doctorRef = doc(db, COLLECTIONS.DOCTORS, appointmentData.doctorId);
+  await updateDoc(doctorRef, {
+    appointments: arrayUnion(docRef.id),
+  });
+
+  return docRef.id;
+}
+
+// Fetch all approved and profile-completed doctors (Verified)
+export async function getAllVerifiedDoctors() {
+  const doctorsQuery = query(
+    collection(db, COLLECTIONS.DOCTORS),
+    where("isApproved", "==", true),
+    where("profileCompleted", "==", true)
+  );
+  const doctorsSnapshot = await getDocs(doctorsQuery);
+  return doctorsSnapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  }));
 }

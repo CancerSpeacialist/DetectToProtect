@@ -7,7 +7,7 @@ import Link from "next/link";
 import Loader from "@/components/ui/Loader";
 
 export default function HomePage() {
-  const { user, loading, redirecting } = useRoleRedirect(null, {
+  const { user, loading, redirecting } = useRoleRedirect("redirectByRole", {
     delay: 500,
     fallback: "/sign-in",
   });

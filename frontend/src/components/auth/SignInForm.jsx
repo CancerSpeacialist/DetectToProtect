@@ -1,29 +1,39 @@
 "use client";
 
-import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { FormField } from '@/components/ui/form-field';
-import { LoadingButton } from '@/components/ui/loading-button';
-import { ErrorAlert } from '@/components/ui/error-alert';
-import { useSignIn } from '@/hooks/useSignIn';
-import { useRoleRedirect } from '@/hooks/useRoleRedirect';
-import Link from 'next/link';
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
+import { FormField } from "@/components/ui/form-field";
+import { LoadingButton } from "@/components/ui/loading-button";
+import { ErrorAlert } from "@/components/ui/error-alert";
+import { useSignIn } from "@/hooks/useSignIn";
+import { useRoleRedirect } from "@/hooks/useRoleRedirect";
+import Link from "next/link";
 
 export default function SignInForm() {
   const [formData, setFormData] = useState({
-    email: '',
-    password: ''
+    email: "",
+    password: "",
   });
 
-  const { loading, error, fieldErrors, signIn, clearError, clearFieldErrors } = useSignIn();
-  
+  const { loading, error, fieldErrors, signIn, clearError, clearFieldErrors } =
+    useSignIn();
+
   // Handle automatic redirect after successful authentication
-  useRoleRedirect();
+  useRoleRedirect("redirectByRole", {
+    delay: 500,
+    fallback: "/sign-in", 
+  });
 
   const handleInputChange = (field) => (e) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: e.target.value
+      [field]: e.target.value,
     }));
 
     // Clear errors when user starts typing
@@ -61,7 +71,7 @@ export default function SignInForm() {
               type="email"
               placeholder="Enter your email address"
               value={formData.email}
-              onChange={handleInputChange('email')}
+              onChange={handleInputChange("email")}
               error={fieldErrors.email}
               required
             />
@@ -72,7 +82,7 @@ export default function SignInForm() {
               type="password"
               placeholder="Enter your password"
               value={formData.password}
-              onChange={handleInputChange('password')}
+              onChange={handleInputChange("password")}
               error={fieldErrors.password}
               required
             />
@@ -94,7 +104,7 @@ export default function SignInForm() {
                 Forgot your password?
               </Link>
               <p className="text-sm text-gray-600">
-                Don't have an account?{' '}
+                Don't have an account?{" "}
                 <Link
                   href="/sign-up"
                   className="text-blue-600 hover:underline font-medium"
