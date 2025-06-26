@@ -7,12 +7,11 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { UserPlus, UserCheck, UserX, Clock } from 'lucide-react'
 import { getAllDoctors, getAllIncompleteDoctorProfiles, approveDoctorAccount, rejectDoctorAccount } from '@/lib/firebase/db'
-import { DoctorProfile } from '@/lib/types/auth'
 import CreateDoctorForm from '@/components/admin/CreateDoctorForm'
 
 export default function AdminDoctorsPage() {
-  const [doctors, setDoctors] = useState<DoctorProfile[]>([])
-  const [incompleteDoctors, setIncompleteDoctors] = useState<DoctorProfile[]>([])
+  const [doctors, setDoctors] = useState([])
+  const [incompleteDoctors, setIncompleteDoctors] = useState([])
   const [loading, setLoading] = useState(true)
   const [refreshTrigger, setRefreshTrigger] = useState(0)
 
@@ -35,7 +34,7 @@ export default function AdminDoctorsPage() {
     loadData()
   }, [refreshTrigger])
 
-  const handleApproveDoctor = async (uid: string) => {
+  const handleApproveDoctor = async (uid) => {
     try {
       await approveDoctorAccount(uid)
       setRefreshTrigger(prev => prev + 1) // Refresh data
@@ -44,7 +43,7 @@ export default function AdminDoctorsPage() {
     }
   }
 
-  const handleRejectDoctor = async (uid: string) => {
+  const handleRejectDoctor = async (uid) => {
     try {
       await rejectDoctorAccount(uid)
       setRefreshTrigger(prev => prev + 1) // Refresh data
@@ -190,7 +189,17 @@ export default function AdminDoctorsPage() {
                       </div>
                       <div className="space-y-2">
                         <div>
-                          <strong className="text-sm">Specializations:</strong>
+                          <strong className="text-sm">Cancer Specializations:</strong>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {doctor.cancerSpecializations?.map((canspec) => (
+                              <Badge key={canspec} variant="secondary" className="text-xs">
+                                {canspec}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                        <div>
+                          <strong className="text-sm">Other Specializations:</strong>
                           <div className="flex flex-wrap gap-1 mt-1">
                             {doctor.specialization?.map((spec) => (
                               <Badge key={spec} variant="secondary" className="text-xs">

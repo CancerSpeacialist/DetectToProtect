@@ -15,6 +15,7 @@ import {
   UserCheck,
 } from "lucide-react";
 import Link from "next/link";
+import Loader from "@/components/ui/Loader";
 
 export default function AdminProtectedLayout({ children }) {
   const { user, loading, signOut } = useAuth();
@@ -29,11 +30,7 @@ export default function AdminProtectedLayout({ children }) {
   }, [user, loading, router]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin" />
-      </div>
-    );
+    return <Loader />;
   }
 
   if (!user || user.role !== "admin") {

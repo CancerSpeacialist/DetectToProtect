@@ -406,12 +406,6 @@ export async function approveDoctorAccount(uid) {
       updatedAt: serverTimestamp(),
     });
 
-    // Also update the user profile
-    const userRef = doc(db, COLLECTIONS.USERS, uid);
-    await updateDoc(userRef, {
-      isVerified: true,
-      updatedAt: serverTimestamp(),
-    });
   } catch (error) {
     console.error("Error approving doctor account:", error);
     throw new Error("Failed to approve doctor account");

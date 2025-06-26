@@ -25,7 +25,7 @@ const createDoctorSchema = z
     email: z.string().email("Invalid email address"),
     password: z.string().min(8, "Password must be at least 8 characters"),
     confirmPassword: z.string(),
-    phoneNumber: z.string().optional(),
+    phoneNumber: z.string().length(10, "Phone number must be exactly 10 digits").optional(),
   })
   .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords don't match",
@@ -58,7 +58,7 @@ export default function CreateDoctorForm({ onSuccess }) {
         lastName: data.lastName,
         email: data.email,
         password: data.password,
-        phoneNumber: data.phoneNumber || undefined,
+        phoneNumber: data.phoneNumber || "",
       };
 
       await createDoctorByAdmin(doctorData);

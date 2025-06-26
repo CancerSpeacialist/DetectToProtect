@@ -102,6 +102,11 @@ export async function createDoctorByAdmin(doctorData) {
       qualifications: [],
     });
 
+    // Immediately sign out the new doctor so admin stays logged in
+    // await firebaseSignOut(auth);
+
+    // Immediately sign the admin back in
+    // await signInWithEmailAndPassword(auth, adminEmail, adminPassword);
     return user;
   } catch (error) {
     console.error("Error creating doctor account:", error);

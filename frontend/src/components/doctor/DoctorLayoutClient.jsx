@@ -31,6 +31,10 @@ export default function DoctorLayoutClient({ children }) {
     return null;
   }
 
+  if (!doctorProfile) {
+    return null;
+  }
+
   // Show profile completion if needed
   if (doctorProfile && !doctorProfile.profileCompleted) {
     return (
@@ -39,7 +43,7 @@ export default function DoctorLayoutClient({ children }) {
   }
 
   // Show approval pending if not approved
-  if (doctorProfile?.profileCompleted && !doctorProfile.isApproved) {
+  if (doctorProfile?.profileCompleted && !doctorProfile?.isApproved) {
     return <DoctorApprovalPending user={user} signOut={signOut} />;
   }
 
