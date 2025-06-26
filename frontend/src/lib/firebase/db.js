@@ -6,6 +6,7 @@ import {
   collection,
   query,
   where,
+  orderBy,
   getDocs,
   addDoc,
   serverTimestamp,
@@ -405,7 +406,6 @@ export async function approveDoctorAccount(uid) {
       isApproved: true,
       updatedAt: serverTimestamp(),
     });
-
   } catch (error) {
     console.error("Error approving doctor account:", error);
     throw new Error("Failed to approve doctor account");
@@ -535,4 +535,70 @@ export async function getAllVerifiedDoctors() {
     id: doc.id,
     ...doc.data(),
   }));
+}
+
+// Reject the  appointment of a patient
+export async function rejectAppointment(
+  appointmentId,
+  { rejectionReason, doctorNotes }
+) {
+  const appointmentRef = doc(db, COLLECTIONS.APPOINTMENTS, appointmentId);
+  await updateDoc(appointmentRef, {
+    status: "rejected",
+    rejectionReason,
+    doctorNotes,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+// Accept the appointment of a patient
+export async function acceptAppointment(
+  appointmentId,
+  { appointmentDate, appointmentTime, doctorNotes }
+) {
+  const appointmentRef = doc(db, COLLECTIONS.APPOINTMENTS, appointmentId);
+  await updateDoc(appointmentRef, {
+    status: "accepted",
+    appointmentDate: appointmentDate,
+    appointmentTime,
+    doctorNotes,
+    updatedAt: serverTimestamp(),
+  });
+}
+
+
+// FirebaseError: The query requires an index. You can create it here: 
+// https://console.firebase.google.com/v1/r/project/detecttoprotect-8e2f2/firestore/indexes?create_composite=Clpwcm9qZWN0cy9kZXRlY3R0b3Byb3RlY3QtOGUyZjIvZGF0YWJhc2VzLyhkZWZhdWx0KS9jb2xsZWN0aW9uR3JvdXBzL2FwcG9pbnRtZW50cy9pbmRleGVzL18QARoMCghkb2N0b3JJZBABGg0KCWNyZWF0ZWRBdBACGgwKCF9fbmFtZV9fEAI
+
+// Fetch appointments for a doctor and their patients' details
+export async function getDoctorAppointmentsWithPatients(doctorUid) {
+  // Fetch appointments for this doctor
+  const appointmentsQuery = query(
+    collection(db, COLLECTIONS.APPOINTMENTS),
+    where("doctorId", "==", doctorUid),
+    orderBy("createdAt", "desc")
+  );
+  const appointmentsSnapshot = await getDocs(appointmentsQuery);
+  const appointmentsData = appointmentsSnapshot.docs.map((doc) => ({
+    id: doc.id,
+    ...doc.data(),
+  }));
+
+  // Get unique patient IDs
+  const patientIds = [...new Set(appointmentsData.map((apt) => apt.patientId))];
+
+  // Fetch patient details
+  const patientsData = {};
+  for (const patientId of patientIds) {
+    const patientQuery = query(
+      collection(db, COLLECTIONS.PATIENTS),
+      where("uid", "==", patientId)
+    );
+    const patientSnapshot = await getDocs(patientQuery);
+    if (!patientSnapshot.empty) {
+      patientsData[patientId] = patientSnapshot.docs[0].data();
+    }
+  }
+
+  return { appointments: appointmentsData, patients: patientsData };
 }

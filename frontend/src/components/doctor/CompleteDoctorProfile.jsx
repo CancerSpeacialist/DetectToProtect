@@ -18,7 +18,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Loader2, UserCheck, X } from "lucide-react";
 import { completeDoctorProfile } from "@/lib/firebase/db";
-import cancerTypes from "@/cancerTypes";
+import { cancerTypes } from "@/constants";
 
 // Fixed schema - removed the string fields for specializations and qualifications
 // since we handle them as arrays separately
@@ -95,7 +95,7 @@ export default function CompleteDoctorProfile({ doctorUid, onSuccess }) {
         setError("Please add at least one qualification");
         return;
       }
-      
+
       if (cancerSpecializations.length === 0) {
         setError("Please select at least one cancer specialization");
         return;

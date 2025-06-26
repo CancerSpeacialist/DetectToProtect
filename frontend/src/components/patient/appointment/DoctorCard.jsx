@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Clock, DollarSign, Calendar, Stethoscope } from "lucide-react";
-import cancerTypes from "@/cancerTypes";
+import cancerTypes from "@/constants";
 
 // Doctor Card Component
 export default function DoctorCard({
