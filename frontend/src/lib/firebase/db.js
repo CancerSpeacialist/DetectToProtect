@@ -22,7 +22,7 @@ export const COLLECTIONS = {
   DOCTORS: "doctors",
   ADMINS: "admins",
   APPOINTMENTS: "appointments",
-  REPORTS: "reports",
+  SCREENING_HISTORY: "screening_history ",
 };
 
 // Create user profile in Firestore
@@ -566,10 +566,6 @@ export async function acceptAppointment(
   });
 }
 
-
-// FirebaseError: The query requires an index. You can create it here: 
-// https://console.firebase.google.com/v1/r/project/detecttoprotect-8e2f2/firestore/indexes?create_composite=Clpwcm9qZWN0cy9kZXRlY3R0b3Byb3RlY3QtOGUyZjIvZGF0YWJhc2VzLyhkZWZhdWx0KS9jb2xsZWN0aW9uR3JvdXBzL2FwcG9pbnRtZW50cy9pbmRleGVzL18QARoMCghkb2N0b3JJZBABGg0KCWNyZWF0ZWRBdBACGgwKCF9fbmFtZV9fEAI
-
 // Fetch appointments for a doctor and their patients' details
 export async function getDoctorAppointmentsWithPatients(doctorUid) {
   // Fetch appointments for this doctor
@@ -601,4 +597,55 @@ export async function getDoctorAppointmentsWithPatients(doctorUid) {
   }
 
   return { appointments: appointmentsData, patients: patientsData };
+}
+
+// Fetch appointment and its patient details by appointmentId
+export async function getAppointmentAndPatientById(appointmentId) {
+  // Fetch appointment by document ID
+  const appointmentRef = doc(db, COLLECTIONS.APPOINTMENTS, appointmentId);
+  const appointmentSnapshot = await getDoc(appointmentRef);
+
+  if (!appointmentSnapshot.exists())
+    return { appointment: null, patient: null };
+
+  const appointmentData = {
+    id: appointmentSnapshot.id,
+    ...appointmentSnapshot.data(),
+  };
+
+  // Fetch patient by UID (document ID)
+  const patientRef = doc(db, COLLECTIONS.PATIENTS, appointmentData.patientId);
+  const patientSnapshot = await getDoc(patientRef);
+
+  const patientData = patientSnapshot.exists() ? patientSnapshot.data() : null;
+
+  return { appointment: appointmentData, patient: patientData };
+}
+
+export async function saveScreeningResultAndUpdateAppointment(screeningData) {
+  // Save to screening_history collection
+  const screeningDocRef = await addDoc(
+    collection(db, COLLECTIONS.SCREENING_HISTORY),
+    {
+      ...screeningData,
+      screeningDate: serverTimestamp(),
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    }
+  );
+
+  await updateDoc(doc(db, COLLECTIONS.SCREENING_HISTORY, screeningDocRef.id), {
+    screeningId: screeningDocRef.id,
+  });
+  // Update appointment status to completed if linked
+  const appointmentRef = doc(
+    db,
+    COLLECTIONS.APPOINTMENTS,
+    screeningData.appointmentId
+  );
+  await updateDoc(appointmentRef, {
+    status: "completed",
+    updatedAt: serverTimestamp(),
+    screeningId: screeningDocRef.id,
+  });
 }

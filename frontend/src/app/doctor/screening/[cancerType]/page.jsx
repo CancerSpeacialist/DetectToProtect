@@ -1,203 +1,296 @@
-// src/app/doctor/screening/[cancerType]/page.jsx
-
-// interface AnalysisResult {
-//   id: string;
-//   classification: string;
-//   confidence: number;
-//   status: "processing" | "completed" | "error";
-//   processingTime?: number;
-//   additionalInfo?: {
-//     regions?: string[];
-//     recommendations?: string[];
-//   };
-// }
-
 "use client";
 
-import React, { useEffect } from "react";
-import { FileUpload } from "@/components/ui/file-upload";
-import { AnalysisResults } from "@/components/doctor/screening/analysis-results";
-import { PDFGenerator } from "@/components/doctor/screening/pdf-generator";
+import { useState, useEffect, useRef } from "react";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText } from "lucide-react";
-import { useCancerScreening } from "@/hooks/useCancerScreening";
+import { AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
+import Loader from "@/components/ui/Loader";
+import { useAuth } from "@/lib/context/AuthContext";
+import {
+  getAppointmentAndPatientById,
+  saveScreeningResultAndUpdateAppointment,
+} from "@/lib/firebase/db";
+import { uploadScreeningImageToCloudinary } from "@/lib/cloudinary/cloudinary";
+import { cancerTypes } from "@/constants";
+import AppointmentContextCard from "@/components/doctor/screening/AppointmentContextCard";
+import AnalysisGuidelines from "@/components/doctor/screening/AnalysisGuidelines";
+import ImageUploadBox from "@/components/doctor/screening/ImageUploadBox";
+import ResultsModal from "@/components/doctor/screening/ResultsModal";
+import CancerHeader from "@/components/doctor/screening/CancerHeader";
 
-export default function CancerScreeningPage({ params }) {
-  const { cancerType } = React.use(params);
+export default function CancerScreening() {
+  const params = useParams();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const { user } = useAuth();
 
-  const {
-    selectedFile,
-    isUploading,
-    isAnalyzing,
-    uploadProgress,
-    analysisResult,
-    imageUrl,
-    error,
-    handleFileSelect,
-    handleAnalyze,
-    cancelUpload,
-    cleanup,
-    isProcessing,
-    canAnalyze,
-  } = useCancerScreening(cancerType);
+  const cancerType = params.cancerType;
+  const appointmentId = searchParams.get("appointmentId");
 
-  // Cleanup on unmount
+  const [appointment, setAppointment] = useState(null);
+  const [patient, setPatient] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  // File upload states
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [processing, setProcessing] = useState(false);
+
+  const [resultsSaved, setResultsSaved] = useState(false);
+  const [screeningForm, setScreeningForm] = useState({
+    selectedFile: null,
+    previewUrl: null,
+    doctorReview: "",
+    additionalFindings: [],
+    status: "completed",
+  });
+
+  const [saving, setSaving] = useState(false);
+  const [aiResults, setAiResults] = useState(null);
+  const [showResultsModal, setShowResultsModal] = useState(false);
+
   useEffect(() => {
-    return cleanup;
-  }, [cleanup]);
+    if (appointmentId && user) {
+      fetchAppointmentData();
+    } else if (user) {
+      setLoading(false);
+    }
+  }, [appointmentId, user]);
+
+  // fetch appointment and patient data
+  const fetchAppointmentData = async () => {
+    try {
+      const { appointment, patient } = await getAppointmentAndPatientById(
+        appointmentId
+      );
+      if (appointment) setAppointment(appointment);
+      if (patient) setPatient(patient);
+    } catch (error) {
+      console.error("Error fetching appointment data:", error);
+      toast.error("Failed to load appointment details");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle file selection
+  // const handleFileSelect = (event) => {
+  //   const file = event.target.files[0];
+  //   if (file) {
+  //     if (file.type.startsWith("image/")) {
+  //       setScreeningForm((prev) => ({
+  //         ...prev,
+  //         selectedFile: file,
+  //         previewUrl: URL.createObjectURL(file),
+  //       }));
+  //     } else {
+  //       toast.error("Please select a valid image file");
+  //     }
+  //   }
+  // };
+
+  // have to do by PDF Comoponents
+  const generatePDFReport = async (screeningData) => {
+    // Simulate PDF generation - replace with actual PDF service
+    try {
+      const mockPdfUrl = `https://res.cloudinary.com/your-cloud/raw/upload/v1/reports/screening_${Date.now()}.pdf`;
+      return mockPdfUrl;
+    } catch (error) {
+      console.error("PDF generation error:", error);
+      throw new Error("Failed to generate PDF report");
+    }
+  };
+
+  // has to do by API
+  const processWithAI = async (imageUrl) => {
+    // Simulate AI processing - replace with actual AI service call
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        // Mock AI results - replace with actual AI API call
+        const mockResults = {
+          classification: Math.random() > 0.5 ? "Malignant" : "Benign",
+          confidence: Math.floor(Math.random() * 30) + 70, // 70-99%
+          additionalFindings: [
+            "Irregular mass detected in upper quadrant",
+            "Increased vascular activity observed",
+            "Tissue density appears abnormal",
+          ],
+          resultImageUrl: imageUrl,
+        };
+        resolve(mockResults);
+      }, 3000);
+    });
+  };
+
+  const handleAnalyze = async (abortController) => {
+    if (!screeningForm.selectedFile) {
+      toast.error("Please select an image first");
+      return;
+    }
+
+    setProcessing(true);
+    setUploadProgress(0);
+
+    try {
+      // Step 1: Upload input image to Cloudinary
+      setUploadProgress(25);
+      setIsUploading(true);
+      const inputImageUrl = await uploadScreeningImageToCloudinary({
+        file: screeningForm.selectedFile,
+        cancerType,
+        abortController,
+      });
+      setIsUploading(false);
+
+      // Step 2: Process with AI
+      setUploadProgress(50);
+      const aiResults = await processWithAI(inputImageUrl);
+
+      // Step 3: Generate PDF report
+      setUploadProgress(75);
+      const reportPdfUrl = await generatePDFReport({
+        inputImageUrl,
+        aiResults,
+        cancerType,
+        patient,
+        appointment,
+      });
+
+      setUploadProgress(100);
+
+      setAiResults({
+        ...aiResults,
+        inputImageUrl,
+        reportPdfUrl,
+      });
+
+      setShowResultsModal(true);
+      toast.success("Analysis completed successfully!");
+    } catch (error) {
+      setIsUploading(false);
+      console.error("Analysis error:", error);
+      toast.error(error.message || "Analysis failed");
+    } finally {
+      setProcessing(false);
+      setUploadProgress(0);
+      setIsUploading(false);
+    }
+  };
+
+  const handleSaveScreening = async () => {
+    if (!aiResults) {
+      toast.error("No analysis results to save");
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      // Save to screening_history collection
+      const screeningData = {
+        appointmentId: appointmentId || null,
+        patientId: appointment?.patientId || null,
+        doctorId: user.uid,
+        cancerType,
+        inputImageUrl: aiResults.inputImageUrl,
+        resultImageUrl: aiResults.resultImageUrl,
+        classification: aiResults.classification,
+        confidence: aiResults.confidence,
+        reportPdfUrl: aiResults.reportPdfUrl,
+        aiModelVersion: aiResults.modelVersion || "not_specified",
+        additionalFindings: aiResults.additionalFindings || [],
+        doctorReview: screeningForm.doctorReview,
+        status: screeningForm.status,
+      };
+
+      await saveScreeningResultAndUpdateAppointment(screeningData);
+
+      toast.success("Screening results saved successfully!");
+      setShowResultsModal(false);
+      setResultsSaved(true);
+      // Redirect to appointments or ask user
+      // setTimeout(() => {
+      //   router.push("/doctor/appointments");
+      // }, 2000);
+    } catch (error) {
+      console.error("Error saving screening:", error);
+      toast.error("Failed to save screening results");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const cancerInfo = cancerTypes.find((type) => type.key === cancerType);
+
+  if (loading) {
+    return <Loader />;
+  }
+
+  if (!cancerInfo) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <AlertTriangle className="h-16 w-16 text-red-500 mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            Invalid Cancer Type
+          </h2>
+          <p className="text-gray-600">
+            The specified cancer type is not supported.
+          </p>
+          <Button onClick={() => router.back()} className="mt-4">
+            Go Back
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
-      {/* Header */}
-      <div className="text-center space-y-4">
-        <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-          {cancerType
-            .split("-")
-            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-            .join(" ")}{" "}
-          Cancer Detection
-        </h1>
-        <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-          Upload your medical images for AI-powered analysis. Our advanced
-          machine learning models will help detect potential abnormalities with
-          high accuracy.
-        </p>
-      </div>
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        {/* Left Column - Upload and Controls */}
-        <div className="space-y-6">
-          <Card className="border-2 border-dashed border-blue-200 bg-blue-50/30">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-blue-700">
-                <FileText className="w-6 h-6" />
-                Upload Medical Image
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <FileUpload
-                onFileSelect={handleFileSelect}
-                selectedFile={selectedFile}
-                disabled={isProcessing}
-                acceptedTypes={["image/jpeg", "image/png", "image/dicom"]}
-                maxSize={10 * 1024 * 1024} // 10MB
-                uploadProgress={uploadProgress}
-                isUploading={isUploading}
-                onCancel={cancelUpload}
-                error={error}
-              />
-            </CardContent>
-          </Card>
+        <CancerHeader cancerInfo={cancerInfo} />
 
-          {/* Analysis Button */}
-          <Card>
-            <CardContent className="pt-6">
-              <Button
-                onClick={handleAnalyze}
-                disabled={!canAnalyze}
-                className="w-full h-12 text-lg font-semibold bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 transition-all duration-200"
-              >
-                {isUploading && "Uploading..."}
-                {isAnalyzing && "Analyzing with AI..."}
-                {!isProcessing && selectedFile && "Start AI Analysis"}
-                {!isProcessing && !selectedFile && "Select Image First"}
-              </Button>
+        {/* Appointment Context (if linked) */}
+        <AppointmentContextCard appointment={appointment} patient={patient} />
 
-              {isProcessing && (
-                <div className="mt-4 space-y-2">
-                  <div className="flex justify-between text-sm text-gray-600">
-                    <span>
-                      {isUploading
-                        ? "Uploading image..."
-                        : "Processing with AI..."}
-                    </span>
-                    {isUploading && <span>{Math.round(uploadProgress)}%</span>}
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div
-                      className="bg-gradient-to-r from-blue-600 to-purple-600 h-2 rounded-full transition-all duration-300"
-                      style={{
-                        width: isUploading
-                          ? `${uploadProgress}%`
-                          : isAnalyzing
-                          ? "100%"
-                          : "0%",
-                        animation: isAnalyzing ? "pulse 2s infinite" : "none",
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        {/* Image Upload Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          <ImageUploadBox
+            screeningForm={screeningForm}
+            setScreeningForm={setScreeningForm}
+            processing={processing}
+            isUploading={isUploading}
+            uploadProgress={uploadProgress}
+            handleAnalyze={handleAnalyze}
+            setUploadProgress={setUploadProgress}
+            setProcessing={setProcessing}
+          />
+
+          {/* Analysis Guidelines */}
+          <AnalysisGuidelines />
         </div>
-
-        {/* Right Column - Results */}
-        <div className="space-y-6">
-          <Card className="min-h-[400px]">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full"></div>
-                Analysis Results
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {analysisResult ? (
-                <AnalysisResults
-                  result={analysisResult}
-                  cancerType={cancerType}
-                  imageUrl={imageUrl}
-                />
-              ) : (
-                <div className="flex flex-col items-center justify-center h-64 text-gray-400">
-                  <div className="w-16 h-16 border-4 border-gray-200 border-dashed rounded-full flex items-center justify-center mb-4">
-                    <FileText className="w-8 h-8" />
-                  </div>
-                  <p className="text-lg font-medium mb-2">No Analysis Yet</p>
-                  <p className="text-sm text-center max-w-xs">
-                    Upload an image and click "Start AI Analysis" to see
-                    detailed results here
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* PDF Generation Section */}
-          {analysisResult && analysisResult.status === "completed" && (
-            <PDFGenerator
-              analysisResult={analysisResult}
-              cancerType={cancerType}
-              imageUrl={imageUrl}
-              patientInfo={{
-                name: "Current User", // This should come from auth context
-                id: "P-" + new Date().getTime(),
-                date: new Date().toLocaleDateString(),
-              }}
-            />
-          )}
-        </div>
+        {!resultsSaved && aiResults && (
+          <div className="flex justify-end mt-6 ">
+            <Button
+              variant="outline"
+              onClick={() => setShowResultsModal((prev) => !prev)}
+            >
+              {showResultsModal ? "Hide Results" : "Show Results"}
+            </Button>
+          </div>
+        )}
+        <ResultsModal
+          open={showResultsModal}
+          onOpenChange={setShowResultsModal}
+          aiResults={aiResults}
+          screeningForm={screeningForm}
+          setScreeningForm={setScreeningForm}
+          saving={saving}
+          handleSaveScreening={handleSaveScreening}
+        />
       </div>
-
-      {/* Bottom Section - Additional Info */}
-      {analysisResult && (
-        <Card className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
-          <CardContent className="pt-6">
-            <div className="text-center space-y-2">
-              <h3 className="text-lg font-semibold text-blue-700">
-                Analysis Complete
-              </h3>
-              <p className="text-blue-600">
-                Your medical image has been successfully analyzed. Please
-                consult with a medical professional for proper interpretation of
-                these results.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

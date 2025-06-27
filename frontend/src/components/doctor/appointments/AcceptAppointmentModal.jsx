@@ -50,7 +50,7 @@ function AcceptAppointmentModal({
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="appointmentDate">Appointment Date *</Label>
+              <Label htmlFor="appointmentDate">Appointment Date*</Label>
               <Input
                 id="appointmentDate"
                 type="date"
@@ -66,7 +66,7 @@ function AcceptAppointmentModal({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="appointmentTime">Appointment Time *</Label>
+              <Label htmlFor="appointmentTime">Appointment Time*</Label>
               <Select
                 value={acceptForm.appointmentTime}
                 onValueChange={(value) =>

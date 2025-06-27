@@ -1,14 +1,48 @@
 import { Clock, CheckCircle, XCircle, Stethoscope } from "lucide-react";
 
-// Cancer Types
 export const cancerTypes = [
-  { id: "brain-tumor", name: "Brain Tumor/Cancer", icon: "🧠" },
-  { id: "breast-cancer", name: "Breast Cancer", icon: "🎗️" },
-  { id: "prostate-cancer", name: "Prostate Cancer", icon: "🔵" },
-  { id: "pancreatic-cancer", name: "Pancreatic Cancer", icon: "🟡" },
-  { id: "liver-cancer", name: "Liver Cancer", icon: "🟤" },
-  { id: "esophagus-cancer", name: "Esophagus Cancer", icon: "🔴" },
-  { id: "lung-cancer", name: "Lung Cancer", icon: "🫁" },
+  {
+    key: "brain-tumor",
+    name: "Brain Tumor/Cancer",
+    icon: "🧠",
+    description: "MRI/CT scan analysis",
+  },
+  {
+    key: "breast-cancer",
+    name: "Breast Cancer",
+    icon: "🎗️",
+    description: "Mammography screening",
+  },
+  {
+    key: "prostate-cancer",
+    name: "Prostate Cancer",
+    icon: "🔵",
+    description: "PSA & imaging analysis",
+  },
+  {
+    key: "pancreatic-cancer",
+    name: "Pancreatic Cancer",
+    icon: "🟡",
+    description: "CT/MRI scan evaluation",
+  },
+  {
+    key: "liver-cancer",
+    name: "Liver Cancer",
+    icon: "🟤",
+    description: "Hepatic imaging analysis",
+  },
+  {
+    key: "esophagus-cancer",
+    name: "Esophagus Cancer",
+    icon: "🔴",
+    description: "Endoscopy & imaging",
+  },
+  {
+    key: "lung-cancer",
+    name: "Lung Cancer",
+    icon: "🌬️",
+    description: "Chest X-ray & CT analysis",
+  },
 ];
 
 // Appointment Status Configuration
@@ -26,3 +60,21 @@ export const urgencyConfig = {
   medium: { color: "bg-yellow-100 text-yellow-800", label: "Medium Priority" },
   high: { color: "bg-red-100 text-red-800", label: "High Priority" },
 };
+
+export const statusOptions = [
+  {
+    value: "completed",
+    label: "Completed",
+    color: "bg-green-100 text-green-800",
+  },
+  {
+    value: "under_review",
+    label: "Under Review",
+    color: "bg-yellow-100 text-yellow-800",
+  },
+  {
+    value: "follow_up_needed",
+    label: "Follow-up Needed",
+    color: "bg-red-100 text-red-800",
+  },
+];
