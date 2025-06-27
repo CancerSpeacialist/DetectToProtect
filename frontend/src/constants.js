@@ -2,48 +2,55 @@ import { Clock, CheckCircle, XCircle, Stethoscope } from "lucide-react";
 
 export const cancerTypes = [
   {
-    key: "brain-tumor",
+    id: "brain-tumor",
     name: "Brain Tumor/Cancer",
     icon: "🧠",
     description: "MRI/CT scan analysis",
+    color: "bg-purple-100 text-purple-800 border-purple-200",
   },
   {
-    key: "breast-cancer",
+    id: "breast-cancer",
     name: "Breast Cancer",
     icon: "🎗️",
     description: "Mammography screening",
+    color: "bg-pink-100 text-pink-800 border-pink-200",
   },
   {
-    key: "prostate-cancer",
+    id: "prostate-cancer",
     name: "Prostate Cancer",
     icon: "🔵",
     description: "PSA & imaging analysis",
+    color: "bg-blue-100 text-blue-800 border-blue-200",
   },
   {
-    key: "pancreatic-cancer",
+    id: "pancreatic-cancer",
     name: "Pancreatic Cancer",
     icon: "🟡",
     description: "CT/MRI scan evaluation",
+    color: "bg-yellow-100 text-yellow-800 border-yellow-200",
   },
   {
-    key: "liver-cancer",
+    id: "liver-cancer",
     name: "Liver Cancer",
     icon: "🟤",
     description: "Hepatic imaging analysis",
+    color: "bg-orange-100 text-orange-800 border-orange-200",
   },
   {
-    key: "esophagus-cancer",
+    id: "esophagus-cancer",
     name: "Esophagus Cancer",
     icon: "🔴",
     description: "Endoscopy & imaging",
+    color: "bg-red-100 text-red-800 border-red-200",
   },
   {
-    key: "lung-cancer",
+    id: "lung-cancer",
     name: "Lung Cancer",
     icon: "🌬️",
     description: "Chest X-ray & CT analysis",
+    color: "bg-green-100 text-green-800 border-green-200",
   },
-];
+]
 
 // Appointment Status Configuration
 export const statusConfig = {

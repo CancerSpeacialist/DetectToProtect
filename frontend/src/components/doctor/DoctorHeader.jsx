@@ -1,4 +1,4 @@
-import { Bell, Menu, Search, Plus } from "lucide-react";
+import { Bell, Menu, Search, Plus, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { User, Settings, LogOut } from "lucide-react";
+import Link from "next/link";
 
 function DoctorHeader({ user, doctorProfile, onMenuClick, signOut }) {
   return (
@@ -29,18 +30,19 @@ function DoctorHeader({ user, doctorProfile, onMenuClick, signOut }) {
             <Menu className="h-5 w-5" />
           </Button>
 
-
-          {/* Page Title */}
-          <div>
-            {/* <h1 className="text-xl lg:text-2xl font-semibold text-gray-900">
-              {getPageTitle()}
-            </h1>
-            <p className="text-sm text-gray-500 hidden sm:block">
-              Welcome back, Dr. {user?.firstName}
-            </p> */}
+          <div className="flex items-center space-x-4">
+            <Link
+              href="/doctor/dashboard"
+              className="flex items-center space-x-2"
+            >
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
+                <Shield className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                DetectToProtect
+              </span>
+            </Link>
           </div>
-
-          
         </div>
 
         {/* Center Section - Search */}

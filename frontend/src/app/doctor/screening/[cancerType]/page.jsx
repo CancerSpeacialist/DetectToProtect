@@ -73,22 +73,6 @@ export default function CancerScreening() {
     }
   };
 
-  // Handle file selection
-  // const handleFileSelect = (event) => {
-  //   const file = event.target.files[0];
-  //   if (file) {
-  //     if (file.type.startsWith("image/")) {
-  //       setScreeningForm((prev) => ({
-  //         ...prev,
-  //         selectedFile: file,
-  //         previewUrl: URL.createObjectURL(file),
-  //       }));
-  //     } else {
-  //       toast.error("Please select a valid image file");
-  //     }
-  //   }
-  // };
-
   // have to do by PDF Comoponents
   const generatePDFReport = async (screeningData) => {
     // Simulate PDF generation - replace with actual PDF service
@@ -134,13 +118,11 @@ export default function CancerScreening() {
     try {
       // Step 1: Upload input image to Cloudinary
       setUploadProgress(25);
-      setIsUploading(true);
       const inputImageUrl = await uploadScreeningImageToCloudinary({
         file: screeningForm.selectedFile,
         cancerType,
         abortController,
       });
-      setIsUploading(false);
 
       // Step 2: Process with AI
       setUploadProgress(50);
@@ -167,13 +149,11 @@ export default function CancerScreening() {
       setShowResultsModal(true);
       toast.success("Analysis completed successfully!");
     } catch (error) {
-      setIsUploading(false);
       console.error("Analysis error:", error);
       toast.error(error.message || "Analysis failed");
     } finally {
       setProcessing(false);
       setUploadProgress(0);
-      setIsUploading(false);
     }
   };
 
@@ -220,7 +200,7 @@ export default function CancerScreening() {
     }
   };
 
-  const cancerInfo = cancerTypes.find((type) => type.key === cancerType);
+  const cancerInfo = cancerTypes.find((type) => type.id === cancerType);
 
   if (loading) {
     return <Loader />;
@@ -261,7 +241,6 @@ export default function CancerScreening() {
             screeningForm={screeningForm}
             setScreeningForm={setScreeningForm}
             processing={processing}
-            isUploading={isUploading}
             uploadProgress={uploadProgress}
             handleAnalyze={handleAnalyze}
             setUploadProgress={setUploadProgress}

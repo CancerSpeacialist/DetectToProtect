@@ -71,7 +71,13 @@ export default function DoctorLayoutClient({ children }) {
           />
         </div>
         {/* Main Content */}
-        <main className="flex-1 ml-64 p-6 overflow-auto">{children}</main>
+        <main
+          className={`flex-1 p-6 transition-all duration-300 ${
+            sidebarOpen ? "ml-64" : "ml-16"
+          }`}
+        >
+          {children}
+        </main>
       </div>
     </>
   );
