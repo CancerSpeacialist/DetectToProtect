@@ -22,7 +22,7 @@ export const COLLECTIONS = {
   DOCTORS: "doctors",
   ADMINS: "admins",
   APPOINTMENTS: "appointments",
-  SCREENING_HISTORY: "screening_history ",
+  SCREENING_HISTORY: "screening_history",
 };
 
 // Create user profile in Firestore
