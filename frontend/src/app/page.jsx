@@ -146,7 +146,7 @@ export default function HomePage() {
         <div className="container px-4 md:px-6 mx-auto">
           <div className="flex flex-col sm:flex-row justify-between items-center">
             <p className="text-sm text-gray-600">
-              © 2024 DetectToProtect. All rights reserved.
+              © 2025 DetectToProtect. All rights reserved.
             </p>
             <div className="flex items-center space-x-4 mt-4 sm:mt-0">
               <Link
