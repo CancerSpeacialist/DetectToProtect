@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Filter, Search, AlertCircle, XCircle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import cancerTypes from "@/constants";
+import {cancerTypes} from "@/constants";
 
 export default function DoctorFilters({
   selectedCancerType,

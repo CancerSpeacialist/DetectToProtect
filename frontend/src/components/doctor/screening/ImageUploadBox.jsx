@@ -9,41 +9,10 @@ export default function ImageUploadBox({
   setScreeningForm,
   processing,
   uploadProgress,
-  setProcessing,
   handleAnalyze,
-  setUploadProgress,
+  handleCancel,
+  handleFileSelect,
 }) {
-  const abortControllerRef = useRef(null);
-
-  // Update handleAnalyze to use abortControllerRef
-  const handleAnalyzeWithAbort = async () => {
-    abortControllerRef.current = new AbortController();
-    await handleAnalyze(abortControllerRef.current);
-  };
-
-  // Cancel upload handler
-  const handleCancel = () => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-    }
-    setUploadProgress(0);
-    setProcessing(false);
-    setScreeningForm((prev) => ({
-      ...prev,
-      selectedFile: null,
-      previewUrl: null,
-    }));
-  };
-
-  const handleFileSelect = (file) => {
-    setScreeningForm((prev) => ({
-      ...prev,
-      selectedFile: file,
-      previewUrl: file ? URL.createObjectURL(file) : null,
-    }));
-    setUploadProgress(0);
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -67,7 +36,7 @@ export default function ImageUploadBox({
         {/* Show preview and analyze button if file is selected */}
         {screeningForm.selectedFile && (
           <Button
-            onClick={handleAnalyzeWithAbort}
+            onClick={handleAnalyze}
             disabled={processing}
             className="w-full"
             size="lg"

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
@@ -9,6 +9,7 @@ import Loader from "@/components/ui/Loader";
 import { useAuth } from "@/lib/context/AuthContext";
 import {
   getAppointmentAndPatientById,
+  getDoctorProfile,
   saveScreeningResultAndUpdateAppointment,
 } from "@/lib/firebase/db";
 import { uploadScreeningImageToCloudinary } from "@/lib/cloudinary/cloudinary";
@@ -30,6 +31,7 @@ export default function CancerScreening() {
 
   const [appointment, setAppointment] = useState(null);
   const [patient, setPatient] = useState(null);
+  const [doctor, setdoctor] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // File upload states
@@ -63,6 +65,8 @@ export default function CancerScreening() {
       const { appointment, patient } = await getAppointmentAndPatientById(
         appointmentId
       );
+      const doc = await getDoctorProfile(user.uid);
+      if (doc) setdoctor(doc);
       if (appointment) setAppointment(appointment);
       if (patient) setPatient(patient);
     } catch (error) {
@@ -73,55 +77,128 @@ export default function CancerScreening() {
     }
   };
 
-  // have to do by PDF Comoponents
-  const generatePDFReport = async (screeningData) => {
-    // Simulate PDF generation - replace with actual PDF service
+  const generatePDFReport = async ({
+    inputImageUrl,
+    aiResults,
+    cancerType,
+    patient,
+    appointment,
+    doctor,
+  }) => {
     try {
-      const mockPdfUrl = `https://res.cloudinary.com/your-cloud/raw/upload/v1/reports/screening_${Date.now()}.pdf`;
-      return mockPdfUrl;
+      // 1. Generate PDF via API
+      const pdfRes = await fetch("/api/generatePdfReport", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          inputImageUrl,
+          resultImageUrl: aiResults.resultImageUrl || "",
+          aiResults,
+          cancerType,
+          patient,
+          appointment,
+          doctor,
+        }),
+      });
+
+      if (!pdfRes.ok) {
+        throw new Error("Failed to generate PDF report");
+      }
+
+      // 2. Get PDF as Blob
+      const pdfBlob = await pdfRes.blob();
+
+      // 3. Upload PDF to Cloudinary via API
+      const formData = new FormData();
+      formData.append("file", pdfBlob, `screening_report_${Date.now()}.pdf`);
+
+      const uploadRes = await fetch("/api/uploadPdfToCloudinary", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!uploadRes.ok) {
+        throw new Error("Failed to upload PDF report");
+      }
+
+      const { url: reportPdfUrl } = await uploadRes.json();
+
+      return reportPdfUrl;
     } catch (error) {
-      console.error("PDF generation error:", error);
-      throw new Error("Failed to generate PDF report");
+      console.error("PDF generation/upload error:", error);
+      throw new Error("Failed to generate and upload PDF report");
     }
   };
 
-  // has to do by API
+  // Process image with AI Model
   const processWithAI = async (imageUrl) => {
-    // Simulate AI processing - replace with actual AI service call
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        // Mock AI results - replace with actual AI API call
-        const mockResults = {
-          classification: Math.random() > 0.5 ? "Malignant" : "Benign",
-          confidence: Math.floor(Math.random() * 30) + 70, // 70-99%
-          additionalFindings: [
-            "Irregular mass detected in upper quadrant",
-            "Increased vascular activity observed",
-            "Tissue density appears abnormal",
-          ],
-          resultImageUrl: imageUrl,
-        };
-        resolve(mockResults);
-      }, 3000);
+    const response = await fetch("/api/analyze", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        imageUrl,
+        patientId: user.uid,
+        cancerType: cancerType,
+        timestamp: new Date().toISOString(),
+      }),
+      signal: abortControllerRef.current.signal,
     });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.message || `Analysis failed with status ${response.status}`
+      );
+    }
+
+    const analysisData = await response.json();
+    return analysisData.result;
   };
 
-  const handleAnalyze = async (abortController) => {
-    if (!screeningForm.selectedFile) {
+  const abortControllerRef = useRef(null);
+
+  // Cancel upload handler
+  const handleCancel = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    setUploadProgress(0);
+    setProcessing(false);
+    setScreeningForm((prev) => ({
+      ...prev,
+      selectedFile: null,
+      previewUrl: null,
+    }));
+  };
+
+  const handleFileSelect = (file) => {
+    setScreeningForm((prev) => ({
+      ...prev,
+      selectedFile: file,
+      previewUrl: file ? URL.createObjectURL(file) : null,
+    }));
+    setUploadProgress(0);
+  };
+
+  const handleAnalyze = useCallback(async () => {
+    if (!screeningForm.selectedFile || !user) {
+      setAiResults(null);
       toast.error("Please select an image first");
       return;
     }
-
-    setProcessing(true);
+    abortControllerRef.current = new AbortController();
     setUploadProgress(0);
 
     try {
       // Step 1: Upload input image to Cloudinary
+      setProcessing(true);
       setUploadProgress(25);
       const inputImageUrl = await uploadScreeningImageToCloudinary({
         file: screeningForm.selectedFile,
         cancerType,
-        abortController,
+        abortController: abortControllerRef.current,
       });
 
       // Step 2: Process with AI
@@ -136,6 +213,7 @@ export default function CancerScreening() {
         cancerType,
         patient,
         appointment,
+        doctor,
       });
 
       setUploadProgress(100);
@@ -149,13 +227,32 @@ export default function CancerScreening() {
       setShowResultsModal(true);
       toast.success("Analysis completed successfully!");
     } catch (error) {
+      setAiResults(null);
       console.error("Analysis error:", error);
-      toast.error(error.message || "Analysis failed");
+
+      if (error.name === "AbortError") {
+        setError("Upload was cancelled");
+        toast.error(error.message || "Upload was cancelled");
+      } else if (error.message.includes("fetch")) {
+        toast.error(
+          "Network error. Please check your connection and try again."
+        );
+      } else {
+        toast.error(error.message || "Analysis failed");
+      }
     } finally {
       setProcessing(false);
       setUploadProgress(0);
     }
-  };
+  }, [
+    screeningForm.selectedFile,
+    user,
+    cancerType,
+    patient,
+    appointment,
+    generatePDFReport,
+    processWithAI,
+  ]);
 
   const handleSaveScreening = async () => {
     if (!aiResults) {
@@ -173,7 +270,7 @@ export default function CancerScreening() {
         doctorId: user.uid,
         cancerType,
         inputImageUrl: aiResults.inputImageUrl,
-        resultImageUrl: aiResults.resultImageUrl,
+        resultImageUrl: aiResults.resultImageUrl || "",
         classification: aiResults.classification,
         confidence: aiResults.confidence,
         reportPdfUrl: aiResults.reportPdfUrl,
@@ -243,8 +340,8 @@ export default function CancerScreening() {
             processing={processing}
             uploadProgress={uploadProgress}
             handleAnalyze={handleAnalyze}
-            setUploadProgress={setUploadProgress}
-            setProcessing={setProcessing}
+            handleFileSelect={handleFileSelect}
+            handleCancel={handleCancel}
           />
 
           {/* Analysis Guidelines */}

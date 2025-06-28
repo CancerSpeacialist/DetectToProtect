@@ -13,8 +13,6 @@ export async function POST(request) {
     }
 
     // Send image to Python ML model
-    const startTime = Date.now();
-
     const mlResponse = await fetch("http://localhost:5000/predict", {
       method: "POST",
       headers: {
@@ -31,7 +29,6 @@ export async function POST(request) {
     }
 
     const mlResult = await mlResponse.json();
-    const processingTime = Date.now() - startTime;
 
     // Format the result
     const analysisResult = {
@@ -39,25 +36,12 @@ export async function POST(request) {
       classification: mlResult.prediction,
       confidence: mlResult.confidence,
       status: "completed",
-      processingTime,
-      additionalInfo: {
-        regions: mlResult.regions || [],
-        recommendations: generateRecommendations(
-          mlResult.prediction,
-          mlResult.confidence
-        ),
-      },
+      additionalFindings: Array.isArray(mlResult.additionalFindings)
+        ? mlResult.additionalFindings
+        : generateRecommendations(mlResult.prediction, mlResult.confidence),
+      resultImageUrl: mlResult.resultImageUrl,
+      aiModelVersion: mlResult.modelVersion,
     };
-
-    // Save analysis result to Firebase
-    await saveAnalysisToFirebase({
-      patientId,
-      cancerType,
-      imageUrl,
-      analysisResult,
-      timestamp: new Date().toISOString(),
-    });
-
     return NextResponse.json({
       success: true,
       result: analysisResult,
@@ -65,16 +49,16 @@ export async function POST(request) {
   } catch (error) {
     console.error("Analysis error:", error);
 
-    // Return error result
-    return NextResponse.json({
-      success: false,
-      result: {
-        id: `error-${Date.now()}`,
-        classification: "Error",
-        confidence: 0,
-        status: "error",
-      },
-    });
+    // // Return error result
+    // return NextResponse.json({
+    //   success: false,
+    //   result: {
+    //     id: `error-${Date.now()}`,
+    //     classification: "Error",
+    //     confidence: 0,
+    //     status: "error",
+    //   },
+    // });
   }
 }
 
@@ -106,10 +90,4 @@ function generateRecommendations(prediction, confidence) {
   );
 
   return recommendations;
-}
-
-// Dummy Firebase save function
-async function saveAnalysisToFirebase(data) {
-  console.log("Saving analysis to Firebase:", data);
-  return true;
 }

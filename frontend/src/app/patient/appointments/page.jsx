@@ -9,7 +9,7 @@ import {
   getAllVerifiedDoctors,
 } from "@/lib/firebase/db";
 import Loader from "@/components/ui/Loader";
-import cancerTypes from "@/constants";
+import {cancerTypes} from "@/constants";
 
 const urgencyLevels = [
   {
