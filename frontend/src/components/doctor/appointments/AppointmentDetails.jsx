@@ -3,17 +3,7 @@ import React from "react";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 
-import { cancerTypes, statusConfig, urgencyConfig } from "@/constants";
-
-const formatDate = (timestamp) => {
-  if (!timestamp) return "Not set";
-  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-};
+import { cancerTypes, statusConfig, urgencyConfig, formatDate } from "@/constants";
 
 function AppointmentDetails({ appointment, patient }) {
   const cancerTypeInfo = cancerTypes.find(

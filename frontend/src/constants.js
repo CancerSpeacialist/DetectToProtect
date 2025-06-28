@@ -50,15 +50,35 @@ export const cancerTypes = [
     description: "Chest X-ray & CT analysis",
     color: "bg-green-100 text-green-800 border-green-200",
   },
-]
+];
 
 // Appointment Status Configuration
 export const statusConfig = {
-  pending: { color: "bg-yellow-100 text-yellow-800", icon: Clock },
-  accepted: { color: "bg-green-100 text-green-800", icon: CheckCircle },
-  rejected: { color: "bg-red-100 text-red-800", icon: XCircle },
-  completed: { color: "bg-blue-100 text-blue-800", icon: Stethoscope },
-  cancelled: { color: "bg-gray-100 text-gray-800", icon: XCircle },
+  pending: {
+    color: "bg-yellow-100 text-yellow-800",
+    icon: Clock,
+    label: "Pending",
+  },
+  accepted: {
+    color: "bg-green-100 text-green-800",
+    icon: CheckCircle,
+    label: "Accepted",
+  },
+  rejected: {
+    color: "bg-red-100 text-red-800",
+    icon: XCircle,
+    label: "Rejected",
+  },
+  completed: {
+    color: "bg-blue-100 text-blue-800",
+    icon: Stethoscope,
+    label: "Completed",
+  },
+  cancelled: {
+    color: "bg-gray-100 text-gray-800",
+    icon: XCircle,
+    label: "Cancelled",
+  },
 };
 
 // Appointment Urgency Configuration
@@ -85,3 +105,23 @@ export const statusOptions = [
     color: "bg-red-100 text-red-800",
   },
 ];
+
+export const formatDate = (timestamp) => {
+  if (!timestamp) return "Not set";
+  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+};
+
+export const formatDateTime = (date, time) => {
+  if (!date || !time) return "Not scheduled";
+  const dateObj = date.toDate ? date.toDate() : new Date(date);
+  return `${dateObj.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  })} at ${time}`;
+};

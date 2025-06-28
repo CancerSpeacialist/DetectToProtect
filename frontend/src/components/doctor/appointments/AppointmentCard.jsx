@@ -13,28 +13,13 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { cancerTypes, statusConfig, urgencyConfig } from "@/constants";
-
-
-const formatDate = (timestamp) => {
-  if (!timestamp) return "Not set";
-  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-};
-
-const formatDateTime = (date, time) => {
-  if (!date || !time) return "Not scheduled";
-  const dateObj = date.toDate ? date.toDate() : new Date(date);
-  return `${dateObj.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  })} at ${time}`;
-};
+import {
+  cancerTypes,
+  statusConfig,
+  urgencyConfig,
+  formatDate,
+  formatDateTime,
+} from "@/constants";
 
 function AppointmentCard({
   appointment,
