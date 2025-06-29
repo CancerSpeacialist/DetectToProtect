@@ -42,8 +42,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
-import { cancerTypes, statusConfig } from "@/constants";
-import { formatDate, formatDateTime } from "@/lib/date-utils";
+import { cancerTypes, statusConfig, formatDate, formatDateTime } from "@/constants";
 import Loader from "@/components/ui/Loader";
 import { useAuth } from "@/lib/context/AuthContext";
 import { getPatientProfile } from "@/lib/firebase/db";
@@ -80,7 +79,7 @@ export default function DiagnosisInput() {
       const screeningsQuery = query(
         collection(db, "screening_history"),
         where("doctorId", "==", user.uid),
-        where("status", "==", "completed"),
+        // where("status", "==", "completed"),
         orderBy("createdAt", "desc")
       );
 

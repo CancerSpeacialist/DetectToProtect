@@ -101,6 +101,17 @@ function ScreeningHistoryList({ screenings, doctors, appointments }) {
                             </p>
                           </div>
                         )}
+                        {/* Show Doctor Diagnosis if available */}
+                        {screening.doctorDiagnosis && (
+                          <div className="bg-green-50 rounded-lg p-3 mt-2">
+                            <p className="font-medium text-green-800 mb-1">
+                              Doctor's Diagnosis:
+                            </p>
+                            <p className="text-green-700">
+                              {screening.doctorDiagnosis}
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>

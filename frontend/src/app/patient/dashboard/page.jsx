@@ -300,7 +300,7 @@ export default function PatientDashboard() {
             <TabsTrigger value="screenings">Screening History</TabsTrigger>
             <TabsTrigger value="reports">Medical Reports</TabsTrigger>
           </TabsList>
-
+        
           <TabsContent value="appointments">
             <FilterComponent
               filters={appointmentFilters}

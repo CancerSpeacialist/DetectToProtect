@@ -7,8 +7,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, FileText, AlertCircle } from "lucide-react";
-import { cancerTypes, statusConfig } from "@/constants";
-import { formatDate } from "@/lib/date-utils";
+import { cancerTypes, statusConfig, formatDate } from "@/constants";
 
 export default function PatientHistoryModal({
   isOpen,

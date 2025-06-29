@@ -4,36 +4,9 @@ import { useState, useEffect } from "react";
 import { db } from "@/lib/firebase/config";
 import { collection, query, where, orderBy, getDocs } from "firebase/firestore";
 import { toast } from "sonner";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Separator } from "@/components/ui/separator";
-import {
-  FileText,
-  Download,
-  Eye,
-  Search,
-  User,
-  Stethoscope,
-  Activity,
-  TrendingUp,
-} from "lucide-react";
-import { cancerTypes, formatDate, formatDateTime } from "@/constants";
+import { Card, CardContent } from "@/components/ui/card";
+import { FileText } from "lucide-react";
+import { cancerTypes } from "@/constants";
 import Loader from "@/components/ui/Loader";
 import { useAuth } from "@/lib/context/AuthContext";
 import ReportDetailsModal from "@/components/patient/reports/ReportDetailsModal";

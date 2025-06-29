@@ -125,8 +125,8 @@ export default function ReportDetailsModal({
               <Separator />
               <div>
                 <h4 className="font-semibold mb-3">Doctor's Review</h4>
-                <div className="bg-blue-50 rounded-lg p-4">
-                  <p className="text-sm text-blue-800">
+                <div className="bg-blue-50 rounded-lg p-4 grid grid-cols-1">
+                  <p className="text-sm text-blue-800  leading-relaxed break-words">
                     {selectedReport.doctorReview}
                   </p>
                 </div>
@@ -134,8 +134,23 @@ export default function ReportDetailsModal({
             </>
           )}
 
+          {/* Doctor's Diagnosis */}
+          {selectedReport.doctorDiagnosis && (
+            <>
+              <Separator />
+              <div>
+                <h4 className="font-semibold mb-3">Doctor's Diagnosis</h4>
+                <div className="bg-green-50 rounded-lg p-4 border border-green-200 grid grid-cols-1">
+                  <p className="text-sm text-green-800 leading-relaxed break-words whitespace-pre-wrap">
+                    {selectedReport.doctorDiagnosis}
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
+
           {/* Images */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             {selectedReport.inputImageUrl && (
               <div>
                 <h5 className="font-medium mb-2">Input Image</h5>
