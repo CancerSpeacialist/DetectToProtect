@@ -48,69 +48,6 @@ export default function PatientDashboard() {
     }
   }, [user]);
 
-  // const fetchPatientData = async () => {
-  //   if (!user) return;
-
-  //   try {
-  //     setLoading(true);
-
-  //     // Fetch appointments
-  //     const appointmentsQuery = query(
-  //       collection(db, "appointments"),
-  //       where("patientId", "==", user.uid),
-  //       orderBy("createdAt", "desc")
-  //     );
-  //     const appointmentsSnapshot = await getDocs(appointmentsQuery);
-  //     const appointmentsData = appointmentsSnapshot.docs.map((doc) => ({
-  //       id: doc.id,
-  //       ...doc.data(),
-  //     }));
-
-  //     // Fetch screening history
-  //     const screeningQuery = query(
-  //       collection(db, "screening_history"),
-  //       where("patientId", "==", user.uid),
-  //       orderBy("createdAt", "desc")
-  //     );
-
-  //     const screeningSnapshot = await getDocs(screeningQuery);
-  //     const screeningData = screeningSnapshot.docs.map((doc) => ({
-  //       id: doc.id,
-  //       ...doc.data(),
-  //     }));
-
-  //     // Get unique doctor IDs
-  //     const doctorIds = [
-  //       ...new Set([
-  //         ...appointmentsData.map((apt) => apt.doctorId),
-  //         ...screeningData.map((screening) => screening.doctorId),
-  //       ]),
-  //     ];
-
-  //     // Fetch doctor details
-  //     const doctorsData = {};
-  //     for (const doctorId of doctorIds) {
-  //       const doctorQuery = query(
-  //         collection(db, "doctor"),
-  //         where("uid", "==", doctorId)
-  //       );
-  //       const doctorSnapshot = await getDocs(doctorQuery);
-  //       if (!doctorSnapshot.empty) {
-  //         doctorsData[doctorId] = doctorSnapshot.docs[0].data();
-  //       }
-  //     }
-
-  //     setAppointments(appointmentsData);
-  //     setScreeningHistory(screeningData);
-  //     setDoctors(doctorsData);
-  //   } catch (error) {
-  //     console.error("Error fetching patient data:", error);
-  //     toast.error("Failed to load dashboard data");
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
   const fetchPatientData = async () => {
     if (!user) return;
 

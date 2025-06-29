@@ -125,3 +125,6 @@ export const formatDateTime = (date, time) => {
     day: "numeric",
   })} at ${time}`;
 };
+
+
+// classification as Cancer or noCancer
