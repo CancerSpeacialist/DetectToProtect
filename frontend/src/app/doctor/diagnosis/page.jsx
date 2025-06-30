@@ -23,26 +23,15 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import {
   Stethoscope,
   Save,
-  History,
-  User,
-  Calendar,
-  FileText,
-  Eye,
-  AlertCircle,
 } from "lucide-react";
 import { toast } from "sonner";
-import { cancerTypes, statusConfig, formatDate, formatDateTime } from "@/constants";
+import {
+  cancerTypes,
+  formatDate,
+} from "@/constants";
 import Loader from "@/components/ui/Loader";
 import { useAuth } from "@/lib/context/AuthContext";
 import { getPatientProfile } from "@/lib/firebase/db";

@@ -27,11 +27,11 @@ const menuItems = [
     icon: BarChart3,
     href: "/doctor/dashboard",
   },
-  {
-    title: "Patient Management",
-    icon: Users,
-    href: "/doctor/patients",
-  },
+  // {
+  //   title: "Patient Management",
+  //   icon: Users,
+  //   href: "/doctor/patients",
+  // },
   {
     title: "Cancer Screening",
     icon: Image,
