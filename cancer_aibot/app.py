@@ -9,7 +9,7 @@ from gemini_config import generate_medical_response
 
 app = Flask(__name__)
 app.config['JSON_SORT_KEYS'] = False
-CORS(app)
+CORS(app, origins=["http://localhost:3000"])
 
 # Initialize chatbot
 try:
