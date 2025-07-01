@@ -1,27 +1,27 @@
-export const sendChatMessage = async (message) => {
+export const sendChatMessage = async (message, language = "en") => {
   try {
-    const response = await fetch('/api/chatbot', {
-      method: 'POST',
+    const response = await fetch("/api/chatbot", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify({ message }),
+      body: JSON.stringify({ message, language }),
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || 'Failed to send message');
+      throw new Error(errorData.error || "Failed to send message");
     }
 
     const data = await response.json();
     return {
       success: true,
-      data: data
+      data: data,
     };
   } catch (error) {
     return {
       success: false,
-      error: error.message
+      error: error.message,
     };
   }
 };

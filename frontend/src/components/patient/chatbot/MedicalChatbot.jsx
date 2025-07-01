@@ -14,37 +14,133 @@ import {
   X,
   Minimize2,
   Maximize2,
+  Mic,
+  MicOff,
+  Volume2,
+  AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { sendChatMessage } from "@/lib/api/chatbot";
 
 export default function MedicalChatbot() {
+  const getWelcomeMessage = (language) => {
+    if (language === "hi") {
+      return `नमस्ते! मैं आपका कैंसर जानकारी सहायक हूं। मैं आपकी निम्नलिखित विषयों में मदद कर सकता हूं:
+
+• विभिन्न प्रकार के कैंसर
+• कैंसर के लक्षण और चरण
+• उपचार विकल्प (कीमोथेरेपी, रेडिएशन, सर्जरी)
+• रोकथाम और जोखिम कारक
+• सहायता संसाधन
+
+आज आप कैंसर के बारे में क्या जानना चाहेंगे?`;
+    }
+    return `Hello! I'm your cancer information assistant. I can help you with questions about:
+
+• Different types of cancer
+• Cancer symptoms and stages  
+• Treatment options (chemotherapy, radiation, surgery)
+• Prevention and risk factors
+• Support resources
+
+What would you like to know about cancer today?`;
+  };
+
   const [messages, setMessages] = useState([
     {
       id: 1,
       type: "bot",
-      content:
-        "Hello! I'm your AI medical assistant specialized in cancer-related questions. How can I help you today?",
+      content: getWelcomeMessage("en"),
       timestamp: new Date(),
       source: "system",
     },
   ]);
+
   const [inputMessage, setInputMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [selectedLanguage, setSelectedLanguage] = useState("en");
+  const [speechSupported, setSpeechSupported] = useState(false);
+  const [charCount, setCharCount] = useState(0);
+
+  const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
+  const recognitionRef = useRef(null);
+
+  // Check for speech recognition support
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const SpeechRecognition =
+        window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        setSpeechSupported(true);
+        recognitionRef.current = new SpeechRecognition();
+        recognitionRef.current.continuous = false;
+        recognitionRef.current.interimResults = true;
+        recognitionRef.current.maxAlternatives = 1;
+
+        recognitionRef.current.onresult = (event) => {
+          const transcript = event.results[0][0].transcript;
+          setInputMessage(transcript);
+        };
+
+        recognitionRef.current.onerror = (event) => {
+          setIsListening(false);
+          if (event.error === "no-speech") {
+            toast.error(
+              selectedLanguage === "hi"
+                ? "कोई आवाज़ नहीं मिली। कृपया दोबारा कोशिश करें और साफ़ बोलें।"
+                : "No speech detected. Please try again and speak clearly."
+            );
+          } else {
+            toast.error(
+              selectedLanguage === "hi"
+                ? `आवाज़ पहचान की त्रुटि: ${event.error}`
+                : `Speech recognition error: ${event.error}`
+            );
+          }
+        };
+
+        recognitionRef.current.onspeechend = () => {
+          setIsListening(false);
+        };
+
+        recognitionRef.current.onend = () => {
+          setIsListening(false);
+        };
+      }
+    }
+  }, []);
 
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    const checkMobile = () => {
+      if (typeof window !== "undefined") {
+        setIsMobile(window.innerWidth < 768);
+      }
+    };
     checkMobile();
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  const messagesEndRef = useRef(null);
-  const inputRef = useRef(null);
+  // useEffect to update welcome message when language changes
+  useEffect(() => {
+    if (messages.length === 1 && messages[0].source === "system") {
+      setMessages([
+        {
+          id: 1,
+          type: "bot",
+          content: getWelcomeMessage(selectedLanguage),
+          timestamp: new Date(),
+          source: "system",
+        },
+      ]);
+    }
+  }, [selectedLanguage]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -69,7 +165,10 @@ export default function MedicalChatbot() {
     setIsLoading(true);
 
     try {
-      const response = await sendChatMessage(inputMessage.trim());
+      const response = await sendChatMessage(
+        inputMessage.trim(),
+        selectedLanguage
+      );
 
       if (response.success) {
         const botMessage = {
@@ -82,6 +181,30 @@ export default function MedicalChatbot() {
         };
 
         setMessages((prev) => [...prev, botMessage]);
+
+        // Text-to-speech for bot responses
+        if ("speechSynthesis" in window) {
+          try {
+            // Stop any ongoing speech
+            window.speechSynthesis.cancel();
+
+            const utterance = new SpeechSynthesisUtterance(
+              response.data.response
+            );
+            utterance.lang = selectedLanguage === "hi" ? "hi-IN" : "en-US";
+            utterance.rate = 0.8;
+            utterance.pitch = 1;
+            utterance.volume = 0.8;
+
+            utterance.onerror = (event) => {
+              console.error("Speech synthesis error:", event.error);
+            };
+
+            window.speechSynthesis.speak(utterance);
+          } catch (error) {
+            console.error("Text-to-speech error:", error);
+          }
+        }
       } else {
         throw new Error(response.error);
       }
@@ -109,13 +232,40 @@ export default function MedicalChatbot() {
     }
   };
 
+  const handleVoiceInput = () => {
+    if (!speechSupported) {
+      toast.error(
+        selectedLanguage === "hi"
+          ? "इस ब्राउज़र में आवाज़ पहचान समर्थित नहीं है"
+          : "Speech recognition not supported in this browser"
+      );
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current?.stop();
+      setIsListening(false);
+    } else {
+      setInputMessage("");
+      setCharCount(0); // Reset character count
+      recognitionRef.current.lang =
+        selectedLanguage === "hi" ? "hi-IN" : "en-US";
+      recognitionRef.current?.start();
+      setIsListening(true);
+      toast.info(
+        selectedLanguage === "hi"
+          ? "सुन रहा हूं... अब बोलें"
+          : "Listening... Speak now"
+      );
+    }
+  };
+
   const clearChat = () => {
     setMessages([
       {
         id: 1,
         type: "bot",
-        content:
-          "Hello! I'm your AI medical assistant specialized in cancer-related questions. How can I help you today?",
+        content: getWelcomeMessage(selectedLanguage),
         timestamp: new Date(),
         source: "system",
       },
@@ -172,7 +322,7 @@ export default function MedicalChatbot() {
             onClick={() => setIsOpen(true)}
             className="h-16 w-16 rounded-full bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-4 focus:ring-blue-300"
           >
-            <MessageCircle className="h-10 w-10" />
+            <MessageCircle className="h-7 w-7" />
           </Button>
 
           {/* Notification badge */}
@@ -182,7 +332,7 @@ export default function MedicalChatbot() {
 
           {/* Tooltip */}
           <div className="absolute bottom-full right-0 mb-2 px-3 py-1 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap pointer-events-none">
-            Ask your medical questions
+            🏥 Cancer Information Assistant
             <div className="absolute top-full right-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
           </div>
         </div>
@@ -193,7 +343,7 @@ export default function MedicalChatbot() {
   return (
     <div
       className={cn(
-        "fixed z-50 ",
+        "fixed z-50",
         isMobile ? "bottom-4 left-4 right-4" : "bottom-6 right-6"
       )}
     >
@@ -201,13 +351,23 @@ export default function MedicalChatbot() {
         className={cn(
           "shadow-2xl transition-all duration-300 border-0 overflow-hidden backdrop-blur-sm bg-white/95",
           isMobile ? "w-full" : "w-96",
-          isMinimized ? "h-16" : "h-[550px]"
+          isMinimized ? "h-16" : "h-[600px]"
         )}
       >
-        <CardHeader className="flex flex-row items-center justify-between pb-3 px-4 bg-blue-600 text-white rounded-t-lg">
+        <CardHeader className="flex flex-row items-center justify-between pb-3 px-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-t-lg">
           <div className="flex items-center gap-2">
-            <Bot className="h-5 w-5" />
-            <CardTitle className="text-sm">Medical AI Assistant</CardTitle>
+            <div className="relative">
+              <Bot className="h-5 w-5" />
+              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-400 rounded-full border-2 border-white"></div>
+            </div>
+            <div>
+              <CardTitle className="text-sm">
+                🏥 Cancer Information Assistant
+              </CardTitle>
+              <p className="text-xs text-blue-100">
+                Your specialized cancer guide
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-1">
             <Button
@@ -226,7 +386,7 @@ export default function MedicalChatbot() {
               variant="ghost"
               size="sm"
               onClick={() => setIsOpen(false)}
-              className="h-8 w-8 p-0 text-white hover:bg-blue-700"
+              className="h-8 w-8 p-0 text-white hover:bg-blue-700 rounded-full transition-colors"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -234,9 +394,45 @@ export default function MedicalChatbot() {
         </CardHeader>
 
         {!isMinimized && (
-          <CardContent className="flex flex-col h-[452px] p-0">
+          <CardContent className="flex flex-col h-[552px] p-0">
+            {/* Medical Disclaimer */}
+            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 m-4 mb-2">
+              <div className="flex items-center">
+                <AlertTriangle className="h-4 w-4 text-yellow-600 mr-2" />
+                <p className="text-xs text-yellow-700">
+                  ⚠️{" "}
+                  {selectedLanguage === "hi"
+                    ? "यह चैटबॉट केवल शैक्षिक जानकारी प्रदान करता है। चिकित्सा सलाह के लिए हमेशा स्वास्थ्य पेशेवरों से सलाह लें।"
+                    : "This chatbot provides educational information only. Always consult healthcare professionals for medical advice."}
+                </p>
+              </div>
+            </div>
+
+            {/* Language and Controls */}
+            <div className="flex items-center justify-between px-4 pb-2">
+              <select
+                value={selectedLanguage}
+                onChange={(e) => setSelectedLanguage(e.target.value)}
+                className="text-xs border rounded px-2 py-1 bg-white"
+              >
+                <option value="en">English</option>
+                <option value="hi">Hindi</option>
+              </select>
+
+              <div className="flex items-center gap-2">
+                {speechSupported && (
+                  <Badge className="text-xs bg-green-100 text-green-800">
+                    🎤{" "}
+                    {selectedLanguage === "hi"
+                      ? "आवाज़ सक्षम"
+                      : "Voice Enabled"}
+                  </Badge>
+                )}
+              </div>
+            </div>
+
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-gray-300">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.map((message) => (
                 <div
                   key={message.id}
@@ -259,8 +455,8 @@ export default function MedicalChatbot() {
                       ) : (
                         <User className="h-4 w-4 mt-0.5 flex-shrink-0" />
                       )}
-                      <div className="flex-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors">
-                        <p className="text-sm leading-relaxed">
+                      <div className="flex-1">
+                        <p className="text-sm leading-relaxed whitespace-pre-line">
                           {message.content}
                         </p>
                       </div>
@@ -276,35 +472,85 @@ export default function MedicalChatbot() {
                   </div>
                 </div>
               ))}
+
               {isLoading && (
                 <div className="flex justify-start">
-                  <div className="bg-gray-100 rounded-lg p-3 shadow-sm animate-pulse">
+                  <div className="bg-gray-100 rounded-lg p-3 shadow-sm">
                     <div className="flex items-center gap-2">
                       <Bot className="h-4 w-4" />
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span className="text-sm">AI is thinking...</span>
+                      <div className="flex space-x-1">
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-75"></div>
+                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-150"></div>
+                      </div>
+                      <span className="text-sm">
+                        {selectedLanguage === "hi"
+                          ? "AI सोच रहा है..."
+                          : "AI is thinking..."}
+                      </span>
                     </div>
                   </div>
                 </div>
               )}
+
+              {isListening && (
+                <div className="flex justify-center">
+                  <div className="bg-red-100 border border-red-300 rounded-lg p-2">
+                    <div className="flex items-center gap-2 text-red-700">
+                      <Mic className="h-4 w-4 animate-pulse" />
+                      <span className="text-sm">
+                        {selectedLanguage === "hi"
+                          ? "सुन रहा हूं..."
+                          : "Listening..."}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div ref={messagesEndRef} />
             </div>
 
             {/* Input Area */}
             <div className="border-t p-4">
               <div className="flex gap-2">
+                {speechSupported && (
+                  <Button
+                    onClick={handleVoiceInput}
+                    disabled={isLoading}
+                    size="sm"
+                    variant={isListening ? "destructive" : "outline"}
+                    className="px-3"
+                  >
+                    {isListening ? (
+                      <MicOff className="h-4 w-4" />
+                    ) : (
+                      <Mic className="h-4 w-4" />
+                    )}
+                  </Button>
+                )}
+
                 <Input
                   ref={inputRef}
                   value={inputMessage}
-                  onChange={(e) => setInputMessage(e.target.value)}
-                  onKeyPress={handleKeyPress}
-                  placeholder="Ask about cancer-related medical questions..."
+                  onChange={(e) => {
+                    setInputMessage(e.target.value);
+                    setCharCount(e.target.value.length);
+                  }}
+                  onKeyDown={handleKeyPress}
+                  placeholder={
+                    selectedLanguage === "hi"
+                      ? "मुझसे कैंसर के बारे में पूछें..."
+                      : "Ask me about cancer..."
+                  }
                   className="flex-1"
-                  disabled={isLoading}
+                  disabled={isLoading || isListening}
+                  maxLength={500}
                 />
+
                 <Button
                   onClick={handleSendMessage}
-                  disabled={!inputMessage.trim() || isLoading}
+                  disabled={!inputMessage.trim() || isLoading || isListening}
                   size="sm"
                   className="px-3"
                 >
@@ -315,18 +561,24 @@ export default function MedicalChatbot() {
                   )}
                 </Button>
               </div>
+
               <div className="mt-2 flex justify-between items-center">
                 <span className="text-xs text-gray-500">
-                  Specialized in cancer-related questions
+                  {selectedLanguage === "hi"
+                    ? "कैंसर संबंधी प्रश्नों में विशेषज्ञ"
+                    : "Specialized in cancer-related questions"}
                 </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={clearChat}
-                  className="text-xs"
-                >
-                  Clear Chat
-                </Button>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400">{charCount}/500</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearChat}
+                    className="text-xs"
+                  >
+                    {selectedLanguage === "hi" ? "चैट साफ़ करें" : "Clear Chat"}
+                  </Button>
+                </div>
               </div>
             </div>
           </CardContent>
