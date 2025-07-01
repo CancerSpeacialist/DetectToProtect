@@ -350,11 +350,11 @@ What would you like to know about cancer today?`;
       <Card
         className={cn(
           "shadow-2xl transition-all duration-300 border-0 overflow-hidden backdrop-blur-sm bg-white/95",
-          isMobile ? "w-full" : "w-96",
+          isMobile ? "w-full" : "w-[450px]",
           isMinimized ? "h-16" : "h-[600px]"
         )}
       >
-        <CardHeader className="flex flex-row items-center justify-between pb-3 px-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-t-lg">
+        <CardHeader className="flex flex-row items-center justify-between pb-3 px-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-t-lg sticky top-0 z-10">
           <div className="flex items-center gap-2">
             <div className="relative">
               <Bot className="h-5 w-5" />
@@ -394,7 +394,7 @@ What would you like to know about cancer today?`;
         </CardHeader>
 
         {!isMinimized && (
-          <CardContent className="flex flex-col h-[552px] p-0">
+          <CardContent className="flex flex-col h-[500px] p-0">
             {/* Medical Disclaimer */}
             <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 m-4 mb-2">
               <div className="flex items-center">
