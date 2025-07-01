@@ -56,5 +56,11 @@ class MedicalResponseGenerator:
 # Singleton usage
 medical_response_generator = MedicalResponseGenerator()
 
-def generate_medical_response(prompt: str, context: str = "") -> str:
-    return medical_response_generator.generate_response(prompt, context)
+def generate_medical_response(prompt: str, context: str = "", language: str = "en") -> str:
+    """Generate medical response with language support"""
+    if language == "hi":
+        system_prompt = f"{context} हिंदी में जवाब दें। केवल चिकित्सा और कैंसर संबंधी जानकारी प्रदान करें।"
+    else:
+        system_prompt = f"{context} Provide only medical and cancer-related information."
+    
+    return medical_response_generator.generate_response(system_prompt, context)
