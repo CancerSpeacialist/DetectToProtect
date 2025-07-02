@@ -139,9 +139,7 @@ export default function CancerScreening() {
       },
       body: JSON.stringify({
         imageUrl,
-        patientId: user.uid,
         cancerType: cancerType,
-        timestamp: new Date().toISOString(),
       }),
       signal: abortControllerRef.current.signal,
     });

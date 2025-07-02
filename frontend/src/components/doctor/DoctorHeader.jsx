@@ -45,28 +45,11 @@ function DoctorHeader({ user, doctorProfile, onMenuClick, signOut }) {
           </div>
         </div>
 
-        {/* Center Section - Search */}
-        <div className="hidden md:flex flex-1 max-w-md mx-8">
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-            <Input
-              placeholder="Search patients, appointments..."
-              className="pl-10 bg-gray-50 border-gray-200 focus:bg-white"
-            />
-          </div>
-        </div>
 
         {/* Right Section */}
         <div className="flex items-center gap-2 lg:gap-4">
           {/* Quick Actions */}
-          <Button
-            size="sm"
-            className="hidden sm:flex bg-blue-600 hover:bg-blue-700"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            New Appointment
-          </Button>
-
+       
           {/* Notifications */}
           <div className="relative">
             <Button variant="ghost" size="sm" className="relative">

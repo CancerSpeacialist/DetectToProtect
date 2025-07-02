@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 
+const ML_MODEL_URL = process.env.ML_MODEL_URL;
+
 export async function POST(request) {
   try {
     const body = await request.json();
-    const { imageUrl, patientId, cancerType } = body;
+    const { imageUrl, cancerType } = body;
 
     if (!imageUrl) {
       return NextResponse.json(
@@ -13,7 +15,7 @@ export async function POST(request) {
     }
 
     // Send image to Python ML model
-    const mlResponse = await fetch("http://localhost:5000/predict", {
+    const mlResponse = await fetch(`${ML_MODEL_URL}/predict`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

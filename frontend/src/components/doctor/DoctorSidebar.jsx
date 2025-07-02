@@ -49,11 +49,6 @@ const menuItems = [
     href: "/doctor/reports",
   },
   {
-    title: "Consultations",
-    icon: Calendar,
-    href: "/doctor/consultations",
-  },
-  {
     title: "Appointments",
     icon: NotebookPenIcon,
     href: "/doctor/appointments",
@@ -82,9 +77,9 @@ function DoctorSidebar({ user, doctorProfile, isOpen, onToggle }) {
     router.push(`/doctor/screening/${cancerType.id}`);
     setShowCancerTypes(false);
     // Close mobile sidebar after navigation
-    if (typeof window !== "undefined" && window.innerWidth < 1024) {
-      onToggle();
-    }
+    // if (typeof window !== "undefined" && window.innerWidth < 1024) {
+    //   onToggle();
+    // }
   };
 
   const isActiveRoute = (href) => {
