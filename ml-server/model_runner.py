@@ -370,7 +370,7 @@ def run_liver_model(model_path, pil_image):
             "resultImageUrl": result_image_url,
             "cancerProbability": cancer_probability,
             "probabilities": {
-                "Non-Cancer": float(probabilities[0]),
+                "noCancer": float(probabilities[0]),
                 "Cancer": float(probabilities[1])
             },
             "modelVersion": "ResNet50-Liver-Cancer-v1.0",

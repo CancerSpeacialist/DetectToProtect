@@ -22,7 +22,7 @@ class LiverCancerInference:
         
         # Load trained weights
         state_dict = torch.load(model_path, map_location=self.device)
-        self.model.load_state_dict(state_dict)
+        self.model.load_state_dict(state_dict, strict = False)
         self.model.eval()
         
         # Define the same transforms used in training validation
@@ -33,8 +33,8 @@ class LiverCancerInference:
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])
         
-        self.class_labels = ["Non-Cancer", "Cancer"]
-        self.class_mapping = {'Non-Cancer': 0, 'Cancer': 1}
+        self.class_labels = ["noCancer", "Cancer"]
+        self.class_mapping = {'noCancer': 0, 'Cancer': 1}
     
     def preprocess_image(self, pil_image):
         """Preprocess PIL image for ResNet50"""
