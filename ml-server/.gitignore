@@ -1,0 +1,38 @@
+
+*.pkl
+*.h5
+*.ckpt
+*.zip
+*.tar.gz
+*.mp4
+*.mkv
+venv/
+__pycache__/
+.env
+# Ignore model files
+
+*.pkl
+*.h5
+*.onnx
+
+# Ignore environment folders
+venv/
+.env
+
+# Ignore cached files
+__pycache__/
+*.pyc
+
+# Ignore logs and outputs
+*.log
+*.csv
+*.json
+*.npz
+*.ipynb_checkpoints
+
+# Ignore IDE or editor files
+.vscode/
+.idea/
+
+
+models

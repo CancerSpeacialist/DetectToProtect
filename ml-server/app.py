@@ -1,74 +1,66 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
+from flask import Flask, request, jsonify, render_template
+from pyngrok import ngrok
 import requests
-from PIL import Image
-import io
-import random
-import time
+from io import BytesIO
+import os
+
+from cancer_config import MODEL_PATHS, PREPROCESS_FUNCS
+from model_runner import run_model
+from file_handler import detect_file_type, preprocess_by_file_type
 
 app = Flask(__name__)
-CORS(app)
 
-@app.route('/predict', methods=['POST'])
+@app.route("/")
+def home():
+    """Render the main template"""
+    return render_template('index.html')
+
+@app.route("/predict", methods=["POST"])
 def predict():
+    data = request.get_json()
+    image_url = data.get("imageUrl")
+    cancer_type = data.get("cancerType")
+
+    if not image_url:
+        return jsonify({"error": "Image URL is required"}), 400
+
+    if cancer_type not in MODEL_PATHS:
+        return jsonify({"error": "Invalid cancer type"}), 400
+
     try:
-        data = request.json
-        image_url = data.get('image_url')
-        cancer_type = data.get('cancer_type', 'unknown')
-        
-        if not image_url:
-            return jsonify({'error': 'No image URL provided'}), 400
-        
-        # Download image from URL
+        # Step 1: Download file from URL
         response = requests.get(image_url)
-        if response.status_code != 200:
-            return jsonify({'error': 'Failed to download image'}), 400
+        response.raise_for_status()
+        file_content = response.content
+
+        # Step 2: Detect file type
+        file_type = detect_file_type(file_content)
+        print(f"Detected file type: {file_type}")
+
+        # Step 3: Preprocess based on file type (convert to PIL Image)
+        pil_image = preprocess_by_file_type(file_content, file_type)
+
+        # Step 4: Cancer-specific preprocessing
+        preprocess_func = PREPROCESS_FUNCS[cancer_type]
+        processed_img = preprocess_func(pil_image)
         
-        # Open image
-        image = Image.open(io.BytesIO(response.content))
-        
-        # Simulate processing time
-        time.sleep(2)
-        
-        # Simple mock prediction (for testing)
-        # In real implementation, this would be your trained model
-        predictions = ['cat', 'dog']
-        confidence_scores = [0.85, 0.92, 0.78, 0.95, 0.67]
-        
-        prediction = random.choice(predictions)
-        confidence = random.choice(confidence_scores)
-        
-        # Mock additional analysis data
-        regions = []
-        if prediction == 'cat':
-            regions = ['ears', 'whiskers', 'eyes']
-        else:
-            regions = ['snout', 'ears', 'tail']
-        
-        result = {
-            'prediction': prediction,
-            'confidence': confidence,
-            'regions': regions,
-            'image_dimensions': list(image.size),
-            'cancer_type': cancer_type,
-            'model_version': '1.0.0-mock'
-        }
-        
+        # Step 4.5: Convert to TensorFlow batch format (shape: [batch_size, height, width, channels])
+        # import numpy as np
+        # if len(processed_img.shape) == 3:
+        #     processed_img = np.expand_dims(processed_img, axis=0)  # Add batch dimension
+        # elif len(processed_img.shape) == 2:
+        #     processed_img = np.expand_dims(processed_img, axis=[0, -1])  # Add batch and channel dims
+
+        # Step 5: Run model
+        model_path = MODEL_PATHS[cancer_type]
+        result = run_model(model_path, processed_img)
+
         return jsonify(result)
-        
+
     except Exception as e:
-        print(f"Error in prediction: {str(e)}")
-        return jsonify({'error': f'Prediction failed: {str(e)}'}), 500
+        return jsonify({"error": str(e)}), 500
 
-@app.route('/health', methods=['GET'])
-def health():
-    return jsonify({'status': 'healthy', 'model': 'cat-dog-classifier-mock'})
-
-if __name__ == '__main__':
-    print("Starting ML Model Server...")
-    print("Model: Cat/Dog Classification (Mock)")
-    print("Server: http://localhost:5000")
-    app.run(host='0.0.0.0', port=5000, debug=True)
-    
-    
-# cd ml-server && pip install -r requirements.txt
+if __name__ == "__main__":
+    public_url = ngrok.connect(5000)
+    print(" * ngrok tunnel running at:", public_url)
+    app.run(port=5000)

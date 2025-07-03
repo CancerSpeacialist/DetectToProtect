@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Cancer AI Prediction Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: "Segoe UI", Arial, sans-serif;
+      background: #f7f7fa;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 420px;
+      margin: 40px auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px #0001;
+      padding: 2rem;
+    }
+
+    h2 {
+      text-align: center;
+      color: #2d3a4a;
+    }
+
+    label {
+      display: block;
+      margin: 1.2em 0 0.4em;
+      color: #444;
+      font-weight: 500;
+    }
+
+    select,
+    input[type="text"] {
+      width: 100%;
+      padding: 0.7em;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 1em;
+    }
+
+    button {
+      margin-top: 1.5em;
+      width: 100%;
+      padding: 0.8em;
+      background: #3b82f6;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 1.1em;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    button:hover {
+      background: #2563eb;
+    }
+
+    .result,
+    .error {
+      margin-top: 2em;
+      padding: 1.2em;
+      border-radius: 8px;
+    }
+
+    .result {
+      background: #e0f7fa;
+      color: #065f46;
+      border: 1px solid #06b6d4;
+    }
+
+    .error {
+      background: #fee2e2;
+      color: #b91c1c;
+      border: 1px solid #f87171;
+    }
+
+    .loading {
+      text-align: center;
+      color: #888;
+      margin-top: 2em;
+    }
+
+    .img-preview {
+      margin-top: 1em;
+      text-align: center;
+    }
+
+    .img-preview img {
+      max-width: 100%;
+      max-height: 180px;
+      border-radius: 8px;
+      border: 1px solid #eee;
+    }
+
+    .footer {
+      text-align: center;
+      margin-top: 2em;
+      color: #aaa;
+      font-size: 0.95em;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h2>Cancer AI Prediction Demo</h2>
+    <form id="predict-form">
+      <label for="cancerType">Cancer Type</label>
+      <select id="cancerType" required>
+        <option value="breast-cancer">Breast Cancer</option>
+        <option value="lung-cancer">Lung Cancer</option>
+        <option value="brain-tumor">Brain Tumor/Cancer</option>
+        <option value="prostate-cancer">Prostate Cancer</option>
+        <option value="pancreatic-cancer">Pancreatic Cancer</option>
+        <option value="liver-cancer">Liver Cancer</option>
+        <option value="esophagus-cancer">Esophagus Cancer</option>
+      </select>
+
+      <label for="imageUrl">Image URL</label>
+      <input type="text" id="imageUrl" placeholder="Paste image URL here..." required />
+
+      <div class="img-preview" id="imgPreview"></div>
+
+      <button type="submit">Analyze</button>
+    </form>
+    <div id="output"></div>
+    <div class="footer">
+      <small>For demo/educational use only. Not for medical diagnosis.</small>
+    </div>
+  </div>
+  <script>
+    const form = document.getElementById("predict-form");
+    const output = document.getElementById("output");
+    const imgPreview = document.getElementById("imgPreview");
+    const imageUrlInput = document.getElementById("imageUrl");
+
+    imageUrlInput.addEventListener("input", () => {
+      const url = imageUrlInput.value.trim();
+      imgPreview.innerHTML = url
+        ? `<img src="${url}" alt="Preview" onerror="this.style.display='none'">`
+        : "";
+    });
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      output.innerHTML = "";
+      const cancerType = document.getElementById("cancerType").value;
+      const imageUrl = imageUrlInput.value.trim();
+
+      if (!imageUrl) {
+        output.innerHTML =
+          '<div class="error">Please provide a valid image URL.</div>';
+        return;
+      }
+
+      output.innerHTML =
+        '<div class="loading">Analyzing image, please wait...</div>';
+
+      try {
+        const res = await fetch("/predict", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ imageUrl, cancerType }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || data.error) {
+          output.innerHTML = `<div class="error"><b>Error:</b> ${data.error || "Unknown error"}</div>`;
+          return;
+        }
+
+        // Display formatted result AND full JSON
+        output.innerHTML = `
+          <div class="result">
+            <b>Prediction:</b> ${data.prediction} <br>
+            <b>Confidence:</b> ${(data.confidence * 100).toFixed(2)}% <br>
+            ${data.additionalFindings
+            ? `<b>Findings:</b> <ul>${data.additionalFindings
+              .map((f) => `<li>${f}</li>`)
+              .join("")}</ul>`
+            : ""
+          }
+            ${data.resultImageUrl
+            ? `<b>Result Image:</b><br><img src="${data.resultImageUrl}" style="max-width:100%;border-radius:6px;margin-top:8px;">`
+            : ""
+          }
+            ${data.yoloResultUrl
+            ? `<b>YOLO Detection:</b><br><img src="${data.yoloResultUrl}" style="max-width:100%;border-radius:6px;margin-top:8px;">`
+            : ""
+          }
+            ${data.modelVersion
+            ? `<div style="margin-top:8px;font-size:0.95em;color:#888;">Model version: ${data.modelVersion}</div>`
+            : ""
+          }
+            
+            <div style="margin-top:20px;">
+              <b>Full API Response (JSON):</b>
+              <pre style="background:#f5f5f5;padding:10px;border-radius:4px;font-size:12px;overflow-x:auto;white-space:pre-wrap;">${JSON.stringify(data, null, 2)}</pre>
+            </div>
+          </div>
+        `;
+      } catch (err) {
+        output.innerHTML = `<div class="error"><b>Error:</b> ${err.message}</div>`;
+      }
+    });
+</script>
+</body>
+
+</html>

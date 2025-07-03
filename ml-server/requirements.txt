@@ -2,3 +2,12 @@ flask==2.3.3
 flask-cors==4.0.0
 Pillow==10.0.1
 requests==2.31.0
+flask
+pyngrok
+requests
+pillow
+numpy
+pydicom
+nibabel
+opencv-python
+cloudinary
