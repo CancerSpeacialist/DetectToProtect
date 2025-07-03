@@ -23,7 +23,7 @@ class LungCancerInference:
         
         # Load trained weights
         state_dict = torch.load(model_path, map_location=self.device)
-        self.model.load_state_dict(state_dict)
+        self.model.load_state_dict(state_dict, strict=False)
         self.model.eval()
         
         # Define the same transforms used in training validation

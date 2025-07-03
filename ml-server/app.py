@@ -44,13 +44,6 @@ def predict():
         preprocess_func = PREPROCESS_FUNCS[cancer_type]
         processed_img = preprocess_func(pil_image)
         
-        # Step 4.5: Convert to TensorFlow batch format (shape: [batch_size, height, width, channels])
-        # import numpy as np
-        # if len(processed_img.shape) == 3:
-        #     processed_img = np.expand_dims(processed_img, axis=0)  # Add batch dimension
-        # elif len(processed_img.shape) == 2:
-        #     processed_img = np.expand_dims(processed_img, axis=[0, -1])  # Add batch and channel dims
-
         # Step 5: Run model
         model_path = MODEL_PATHS[cancer_type]
         result = run_model(model_path, processed_img)
