@@ -2,35 +2,27 @@
 
 import { Loader2, Shield, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useRoleRedirect } from "@/hooks/useRoleRedirect";
 import Link from "next/link";
 import Loader from "@/components/ui/Loader";
+import { useAuth } from "@/lib/context/AuthContext";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function HomePage() {
-  const { user, loading, redirecting } = useRoleRedirect("redirectByRole", {
-    delay: 500,
-    fallback: "/sign-in",
-  });
+  const { user } = useAuth();
+  const router = useRouter();
 
-  // Show loading state
-  if (loading) {
+  // Redirect patient and doctor to their dashboards
+  useEffect(() => {
+    if (user && (user.role === "patient" || user.role === "doctor")) {
+      router.replace(`/${user.role}/dashboard`);
+    }
+  }, [user, router]);
+
+  // Show redirecting state for authenticated users (patient/doctor)
+  if (user && (user.role === "patient" || user.role === "doctor")) {
     return <Loader />;
   }
-
-  // Show redirecting state for authenticated users
-  if (user && redirecting) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
-          <p className="text-gray-600">
-            Welcome back, {user.firstName}! Redirecting to your dashboard...
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   // Show landing page for unauthenticated users
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
