@@ -1,11 +1,93 @@
 import { PDFDocument, rgb, StandardFonts } from "pdf-lib";
 import fetch from "node-fetch";
 
-// Helper to fetch image as Uint8Array
+// Custom error classes for better error identification
+class PDFGenerationError extends Error {
+  constructor(message, cause = null) {
+    super(message);
+    this.name = "PDFGenerationError";
+    this.cause = cause;
+  }
+}
+
+class ImageFetchError extends Error {
+  constructor(message, url, cause = null) {
+    super(message);
+    this.name = "ImageFetchError";
+    this.url = url;
+    this.cause = cause;
+  }
+}
+
+// Helper to fetch image as Uint8Array with proper error handling
 async function fetchImageBytes(url) {
-  const res = await fetch(url);
-  if (!res.ok) throw new Error("Failed to fetch image");
-  return new Uint8Array(await res.arrayBuffer());
+  if (!url || typeof url !== 'string') {
+    throw new ImageFetchError("Invalid URL provided", url);
+  }
+
+  try {
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new ImageFetchError(
+        `Failed to fetch image: ${res.status} ${res.statusText}`,
+        url
+      );
+    }
+
+    const arrayBuffer = await res.arrayBuffer();
+    return new Uint8Array(arrayBuffer);
+  } catch (error) {
+    if (error instanceof ImageFetchError) {
+      throw error;
+    }
+    throw new ImageFetchError(
+      `Network error while fetching image: ${error.message}`,
+      url,
+      error
+    );
+  }
+}
+
+// Helper to safely format date
+function formatDate(dateInput) {
+  try {
+    if (!dateInput) return new Date().toLocaleString();
+
+    // Handle Firebase Timestamp format
+    if (dateInput.seconds) {
+      return new Date(dateInput.seconds * 1000).toLocaleString();
+    }
+
+    // Handle regular Date objects or strings
+    return new Date(dateInput).toLocaleString();
+  } catch (error) {
+    console.warn("Date formatting error:", error);
+    return new Date().toLocaleString();
+  }
+}
+
+// Helper to safely get text content with length limits
+function safeText(text, maxLength = 500) {
+  if (!text || typeof text !== 'string') return '';
+  return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+}
+
+// Helper to embed image with fallback handling
+async function embedImageSafely(pdfDoc, imageBytes, imageName) {
+  try {
+    // Try JPG first, then PNG
+    try {
+      return await pdfDoc.embedJpg(imageBytes);
+    } catch (jpgError) {
+      try {
+        return await pdfDoc.embedPng(imageBytes);
+      } catch (pngError) {
+        throw new Error(`Failed to embed ${imageName} as JPG or PNG`);
+      }
+    }
+  } catch (error) {
+    throw new Error(`Image embedding failed for ${imageName}: ${error.message}`);
+  }
 }
 
 export async function generatePDFReport({
@@ -17,180 +99,305 @@ export async function generatePDFReport({
   appointment,
   doctor,
 }) {
-  const pdfDoc = await PDFDocument.create();
-  const page = pdfDoc.addPage([595, 842]); // A4 size
+  try {
+    // Validate required parameters
+    if (!aiResults || typeof aiResults !== 'object') {
+      throw new PDFGenerationError("AI results are required and must be an object");
+    }
 
-  // Fonts
-  const font = await pdfDoc.embedFont(StandardFonts.Helvetica);
-  const bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    if (!cancerType || typeof cancerType !== 'string') {
+      throw new PDFGenerationError("Cancer type is required and must be a string");
+    }
 
-  let y = 800;
-
-  // Header
-  page.drawText("Medical Imaging AI Analysis Report", {
-    x: 50,
-    y,
-    size: 22,
-    font: bold,
-    color: rgb(0, 0.3, 0.7),
-  });
-  y -= 40;
-
-  // Patient & Appointment Info
-  page.drawText("Patient Information:", { x: 50, y, size: 14, font: bold });
-  y -= 20;
-  page.drawText(
-    `Name: ${patient?.firstName || ""} ${patient?.lastName || ""}`,
-    { x: 60, y, size: 12, font }
-  );
-  y -= 16;
-  page.drawText(`Patient ID: ${patient?.id || "N/A"}`, {
-    x: 60,
-    y,
-    size: 12,
-    font,
-  });
-  y -= 16;
-  page.drawText(`Appointment ID: ${appointment?.id || "N/A"}`, {
-    x: 60,
-    y,
-    size: 12,
-    font,
-  });
-  y -= 16;
-  page.drawText(
-    `Date: ${
-      appointment?.appointmentDate
-        ? new Date(appointment.appointmentDate.seconds * 1000).toLocaleString()
-        : new Date().toLocaleString()
-    }`,
-    { x: 60, y, size: 12, font }
-  );
-  y -= 24;
-
-  // Doctor Info
-  if (doctor) {
-    page.drawText("Doctor:", { x: 50, y, size: 14, font: bold });
-    y -= 20;
-    page.drawText(
-      `Name: Dr. ${doctor.firstName || ""} ${doctor.lastName || ""}`,
-      { x: 60, y, size: 12, font }
-    );
-    y -= 16;
-    page.drawText(`Doctor ID: ${doctor.id || doctor.uid || ""}`, {
-      x: 60,
-      y,
-      size: 12,
-      font,
-    });
-    y -= 24;
-  }
-
-  // Cancer Type & AI Model
-  page.drawText("Screening Details:", { x: 50, y, size: 14, font: bold });
-  y -= 20;
-  page.drawText(`Cancer Type: ${cancerType}`, { x: 60, y, size: 12, font });
-  y -= 16;
-  page.drawText(
-    `AI Model Version: ${
-      aiResults?.aiModelVersion || aiResults?.modelVersion || "N/A"
-    }`,
-    { x: 60, y, size: 12, font }
-  );
-  y -= 24;
-
-  // AI Results
-  page.drawText("AI Analysis Results:", { x: 50, y, size: 14, font: bold });
-  y -= 20;
-  page.drawText(`Classification: ${aiResults?.classification || "N/A"}`, {
-    x: 60,
-    y,
-    size: 12,
-    font,
-  });
-  y -= 16;
-  page.drawText(
-    `Confidence: ${aiResults?.confidence ? aiResults.confidence + "%" : "N/A"}`,
-    { x: 60, y, size: 12, font }
-  );
-  y -= 16;
-  if (aiResults?.additionalFindings?.length) {
-    page.drawText("Findings:", { x: 60, y, size: 12, font: bold });
-    y -= 16;
-    aiResults.additionalFindings.forEach((finding) => {
-      page.drawText(`- ${finding}`, { x: 70, y, size: 11, font });
-      y -= 14;
-    });
-  }
-  y -= 10;
-
-  // Doctor Review
-  if (aiResults?.doctorReview) {
-    page.drawText("Doctor's Review:", { x: 50, y, size: 14, font: bold });
-    y -= 18;
-    page.drawText(aiResults.doctorReview, { x: 60, y, size: 12, font });
-    y -= 24;
-  }
-
-  // Images
-  if (inputImageUrl) {
+    // Create PDF document
+    let pdfDoc;
     try {
-      const inputImgBytes = await fetchImageBytes(inputImageUrl);
-      const inputImg = await pdfDoc
-        .embedJpg(inputImgBytes)
-        .catch(() => pdfDoc.embedPng(inputImgBytes));
-      page.drawText("Input Image:", { x: 50, y, size: 12, font: bold });
-      y -= 120;
-      page.drawImage(inputImg, { x: 50, y, width: 200, height: 100 });
-      y -= 20;
-    } catch (e) {
-      page.drawText("Input image could not be loaded.", {
+      pdfDoc = await PDFDocument.create();
+    } catch (error) {
+      throw new PDFGenerationError("Failed to create PDF document", error);
+    }
+
+    const page = pdfDoc.addPage([595, 842]); // A4 size
+
+    // Embed fonts with error handling
+    let font, bold;
+    try {
+      font = await pdfDoc.embedFont(StandardFonts.Helvetica);
+      bold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+    } catch (error) {
+      throw new PDFGenerationError("Failed to embed fonts", error);
+    }
+
+    let y = 800;
+
+    try {
+      // Header
+      page.drawText("Medical Imaging AI Analysis Report", {
         x: 50,
         y,
-        size: 10,
-        font,
-      });
-      y -= 20;
-    }
-  }
-  if (resultImageUrl) {
-    try {
-      const resultImgBytes = await fetchImageBytes(resultImageUrl);
-      const resultImg = await pdfDoc
-        .embedJpg(resultImgBytes)
-        .catch(() => pdfDoc.embedPng(resultImgBytes));
-      page.drawText("Result Image:", {
-        x: 300,
-        y: y + 120,
-        size: 12,
+        size: 22,
         font: bold,
+        color: rgb(0, 0.3, 0.7),
       });
-      page.drawImage(resultImg, { x: 300, y, width: 200, height: 100 });
+      y -= 40;
+
+      // Patient & Appointment Info
+      page.drawText("Patient Information:", { x: 50, y, size: 14, font: bold });
       y -= 20;
-    } catch (e) {
-      page.drawText("Result image could not be loaded.", {
-        x: 300,
+
+      const patientName = `${patient?.firstName || ""} ${patient?.lastName || ""}`.trim() || "N/A";
+      page.drawText(`Name: ${patientName}`, { x: 60, y, size: 12, font });
+      y -= 16;
+
+      page.drawText(`Patient ID: ${patient?.id || "N/A"}`, {
+        x: 60,
         y,
-        size: 10,
+        size: 12,
         font,
       });
+      y -= 16;
+
+      page.drawText(`Appointment ID: ${appointment?.id || "N/A"}`, {
+        x: 60,
+        y,
+        size: 12,
+        font,
+      });
+      y -= 16;
+
+      page.drawText(`Date: ${formatDate(appointment?.appointmentDate)}`, {
+        x: 60,
+        y,
+        size: 12,
+        font,
+      });
+      y -= 24;
+
+      // Doctor Info
+      if (doctor && typeof doctor === 'object') {
+        page.drawText("Doctor:", { x: 50, y, size: 14, font: bold });
+        y -= 20;
+
+        const doctorName = `${doctor.firstName || ""} ${doctor.lastName || ""}`.trim();
+        page.drawText(`Name: Dr. ${doctorName || "N/A"}`, {
+          x: 60,
+          y,
+          size: 12,
+          font,
+        });
+        y -= 16;
+
+        page.drawText(`Doctor ID: ${doctor.id || doctor.uid || "N/A"}`, {
+          x: 60,
+          y,
+          size: 12,
+          font,
+        });
+        y -= 24;
+      }
+
+      // Cancer Type & AI Model
+      page.drawText("Screening Details:", { x: 50, y, size: 14, font: bold });
       y -= 20;
+      page.drawText(`Cancer Type: ${safeText(cancerType)}`, { x: 60, y, size: 12, font });
+      y -= 16;
+
+      const modelVersion = aiResults?.aiModelVersion || aiResults?.modelVersion || "N/A";
+      page.drawText(`AI Model Version: ${safeText(modelVersion)}`, {
+        x: 60,
+        y,
+        size: 12,
+        font,
+      });
+      y -= 24;
+
+      // AI Results
+      page.drawText("AI Analysis Results:", { x: 50, y, size: 14, font: bold });
+      y -= 20;
+
+      page.drawText(`Classification: ${safeText(aiResults?.classification) || "N/A"}`, {
+        x: 60,
+        y,
+        size: 12,
+        font,
+      });
+      y -= 16;
+
+      const confidence = aiResults?.confidence ? `${aiResults.confidence}%` : "N/A";
+      page.drawText(`Confidence: ${confidence}`, {
+        x: 60,
+        y,
+        size: 12,
+        font,
+      });
+      y -= 16;
+
+      // Additional Findings
+      if (aiResults?.additionalFindings?.length) {
+        page.drawText("Findings:", { x: 60, y, size: 12, font: bold });
+        y -= 16;
+
+        aiResults.additionalFindings.forEach((finding) => {
+          if (finding && typeof finding === 'string') {
+            page.drawText(`- ${safeText(finding, 100)}`, { x: 70, y, size: 11, font });
+            y -= 14;
+          }
+        });
+      }
+      y -= 10;
+
+      // Doctor Review
+      if (aiResults?.doctorReview) {
+        page.drawText("Doctor's Review:", { x: 50, y, size: 14, font: bold });
+        y -= 18;
+        page.drawText(safeText(aiResults.doctorReview, 300), { x: 60, y, size: 12, font });
+        y -= 24;
+      }
+
+      // Images handling with comprehensive error handling
+      let inputImageLoaded = false;
+      let resultImageLoaded = false;
+
+      // Input Image
+      if (inputImageUrl) {
+        try {
+          const inputImgBytes = await fetchImageBytes(inputImageUrl);
+          const inputImg = await embedImageSafely(pdfDoc, inputImgBytes, "input image");
+
+          page.drawText("Input Image:", { x: 50, y, size: 12, font: bold });
+          y -= 120;
+          page.drawImage(inputImg, { x: 50, y, width: 200, height: 100 });
+          inputImageLoaded = true;
+        } catch (error) {
+          console.error("Input image error:", error);
+          page.drawText("Input image could not be loaded.", {
+            x: 50,
+            y,
+            size: 10,
+            font,
+            color: rgb(0.7, 0.3, 0.3),
+          });
+          y -= 20;
+        }
+      }
+
+      // Result Image
+      if (resultImageUrl) {
+        try {
+          const resultImgBytes = await fetchImageBytes(resultImageUrl);
+          const resultImg = await embedImageSafely(pdfDoc, resultImgBytes, "result image");
+
+          const imageY = inputImageLoaded ? y + 120 : y;
+          page.drawText("Result Image:", {
+            x: 300,
+            y: imageY,
+            size: 12,
+            font: bold,
+          });
+
+          const drawY = inputImageLoaded ? y : y - 120;
+          page.drawImage(resultImg, { x: 300, y: drawY, width: 200, height: 100 });
+          resultImageLoaded = true;
+
+          if (!inputImageLoaded) {
+            y -= 120;
+          }
+        } catch (error) {
+          console.error("Result image error:", error);
+          const errorY = inputImageLoaded ? y + 100 : y;
+          page.drawText("Result image could not be loaded.", {
+            x: 300,
+            y: errorY,
+            size: 10,
+            font,
+            color: rgb(0.7, 0.3, 0.3),
+          });
+
+          if (!inputImageLoaded) {
+            y -= 20;
+          }
+        }
+      }
+
+      if (inputImageLoaded || resultImageLoaded) {
+        y -= 20;
+      }
+
+      // Footer & Disclaimer
+      page.drawText(
+        "Disclaimer: This report is generated by an AI system and is for informational purposes only. Please consult a qualified medical professional for diagnosis and treatment.",
+        { x: 50, y: 40, size: 9, font, color: rgb(0.5, 0.1, 0.1) }
+      );
+
+      page.drawText(`Generated: ${formatDate()}`, {
+        x: 50,
+        y: 25,
+        size: 8,
+        font,
+      });
+
+    } catch (error) {
+      throw new PDFGenerationError("Error while drawing PDF content", error);
     }
+
+    // Serialize PDF
+    try {
+      const pdfBytes = await pdfDoc.save();
+      return pdfBytes; // Uint8Array, can be uploaded or sent as a file
+    } catch (error) {
+      throw new PDFGenerationError("Failed to serialize PDF", error);
+    }
+
+  } catch (error) {
+    // Re-throw PDFGenerationError as-is, wrap others
+    if (error instanceof PDFGenerationError) {
+      throw error;
+    }
+    throw new PDFGenerationError("Unexpected error during PDF generation", error);
   }
-
-  // Footer & Disclaimer
-  page.drawText(
-    "Disclaimer: This report is generated by an AI system and is for informational purposes only. Please consult a qualified medical professional for diagnosis and treatment.",
-    { x: 50, y: 40, size: 9, font, color: rgb(0.5, 0.1, 0.1) }
-  );
-  page.drawText(`Generated: ${new Date().toLocaleString()}`, {
-    x: 50,
-    y: 25,
-    size: 8,
-    font,
-  });
-
-  // Serialize PDF
-  const pdfBytes = await pdfDoc.save();
-  return pdfBytes; // Uint8Array, can be uploaded or sent as a file
 }
+
+// Usage example with error handling:
+/*
+try {
+  const pdfBytes = await generatePDFReport({
+    inputImageUrl: "https://example.com/input.jpg",
+    resultImageUrl: "https://example.com/result.jpg",
+    aiResults: {
+      classification: "Benign",
+      confidence: 95,
+      additionalFindings: ["No suspicious masses detected"],
+      doctorReview: "Results reviewed and confirmed.",
+      aiModelVersion: "v2.1.0"
+    },
+    cancerType: "Breast Cancer",
+    patient: {
+      firstName: "John",
+      lastName: "Doe",
+      id: "P12345"
+    },
+    appointment: {
+      id: "A67890",
+      appointmentDate: { seconds: 1640995200 }
+    },
+    doctor: {
+      firstName: "Jane",
+      lastName: "Smith",
+      id: "D001"
+    }
+  });
+  
+  console.log("PDF generated successfully");
+} catch (error) {
+  if (error instanceof PDFGenerationError) {
+    console.error("PDF Generation Error:", error.message);
+    if (error.cause) {
+      console.error("Caused by:", error.cause);
+    }
+  } else if (error instanceof ImageFetchError) {
+    console.error("Image Fetch Error:", error.message, "URL:", error.url);
+  } else {
+    console.error("Unexpected error:", error);
+  }
+}
+*/
