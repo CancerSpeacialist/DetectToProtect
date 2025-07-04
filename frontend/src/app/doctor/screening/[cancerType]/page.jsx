@@ -77,58 +77,206 @@ export default function CancerScreening() {
     }
   };
 
-  const generatePDFReport = async ({
-    inputImageUrl,
-    aiResults,
-    cancerType,
-    patient,
-    appointment,
-    doctor,
-  }) => {
-    try {
-      // 1. Generate PDF via API
-      const pdfRes = await fetch("/api/generatePdfReport", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          inputImageUrl,
-          resultImageUrl: aiResults.resultImageUrl || "",
-          aiResults,
-          cancerType,
-          patient,
-          appointment,
-          doctor,
-        }),
-      });
+  // const generatePDFReport = async ({
+  //   inputImageUrl,
+  //   aiResults,
+  //   cancerType,
+  //   patient,
+  //   appointment,
+  //   doctor,
+  // }) => {
+  //   try {
+  //     // 1. Generate PDF via API
+  //     const pdfRes = await fetch("/api/generatePdfReport", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({
+  //         inputImageUrl,
+  //         resultImageUrl: aiResults.resultImageUrl || "",
+  //         aiResults,
+  //         cancerType,
+  //         patient,
+  //         appointment,
+  //         doctor,
+  //       }),
+  //     });
 
-      if (!pdfRes.ok) {
-        throw new Error("Failed to generate PDF report");
-      }
+  //     if (!pdfRes.ok) {
+  //       throw new Error("Failed to generate PDF report");
+  //     }
 
-      // 2. Get PDF as Blob
-      const pdfBlob = await pdfRes.blob();
+  //     // 2. Get PDF as Blob
+  //     const pdfBlob = await pdfRes.blob();
 
-      // 3. Upload PDF to Cloudinary via API
-      const formData = new FormData();
-      formData.append("file", pdfBlob, `screening_report_${Date.now()}.pdf`);
+  //     // 3. Upload PDF to Cloudinary via API
+  //     const formData = new FormData();
+  //     formData.append("file", pdfBlob, `screening_report_${Date.now()}.pdf`);
 
-      const uploadRes = await fetch("/api/uploadPdfToCloudinary", {
-        method: "POST",
-        body: formData,
-      });
+  //     const uploadRes = await fetch("/api/uploadPdfToCloudinary", {
+  //       method: "POST",
+  //       body: formData,
+  //     });
 
-      if (!uploadRes.ok) {
-        throw new Error("Failed to upload PDF report");
-      }
+  //     if (!uploadRes.ok) {
+  //       throw new Error("Failed to upload PDF report");
+  //     }
 
-      const { url: reportPdfUrl } = await uploadRes.json();
+  //     const { url: reportPdfUrl } = await uploadRes.json();
 
-      return reportPdfUrl;
-    } catch (error) {
-      console.error("PDF generation/upload error:", error);
-      throw new Error("Failed to generate and upload PDF report");
+  //     return reportPdfUrl;
+  //   } catch (error) {
+  //     console.error("PDF generation/upload error:", error);
+  //     throw new Error("Failed to generate and upload PDF report");
+  //   }
+  // };
+
+
+
+// Fixed generatePDFReport function
+// const generatePDFReport = async ({
+//   inputImageUrl,
+//   aiResults,
+//   cancerType,
+//   patient,
+//   appointment,
+//   doctor,
+// }) => {
+//   try {
+//     // 1. Generate PDF via API
+//     const pdfRes = await fetch("/api/generatePdfReport", {
+//       method: "POST",
+//       headers: { "Content-Type": "application/json" },
+//       body: JSON.stringify({
+//         inputImageUrl,
+//         resultImageUrl: aiResults.resultImageUrl || "",
+//         aiResults,
+//         cancerType,
+//         patient,
+//         appointment,
+//         doctor,
+//       }),
+//     });
+
+//     if (!pdfRes.ok) {
+//       throw new Error("Failed to generate PDF report");
+//     }
+
+//     // 2. Get PDF as Blob
+//     const pdfBlob = await pdfRes.blob();
+    
+//     // Debug: Check blob properties
+//     console.log("PDF Blob size:", pdfBlob.size);
+//     console.log("PDF Blob type:", pdfBlob.type);
+
+//     // 3. Upload PDF to Cloudinary via API
+//     const formData = new FormData();
+//     // Ensure the blob has the correct MIME type
+//     const pdfFile = new File([pdfBlob], `screening_report_${Date.now()}.pdf`, {
+//       type: 'application/pdf'
+//     });
+//     formData.append("file", pdfFile);
+
+//     const uploadRes = await fetch("/api/uploadPdfToCloudinary", {
+//       method: "POST",
+//       body: formData,
+//     });
+
+//     if (!uploadRes.ok) {
+//       const errorText = await uploadRes.text();
+//       console.error("Upload error response:", errorText);
+//       throw new Error(`Failed to upload PDF report: ${uploadRes.status} ${errorText}`);
+//     }
+
+//     const { url: reportPdfUrl } = await uploadRes.json();
+//     return reportPdfUrl;
+//   } catch (error) {
+//     console.error("PDF generation/upload error:", error);
+//     throw new Error("Failed to generate and upload PDF report");
+//   }
+// };
+
+
+
+
+
+
+
+
+const generatePDFReport = async ({
+  inputImageUrl,
+  aiResults,
+  cancerType,
+  patient,
+  appointment,
+  doctor,
+}) => {
+  try {
+    // 1. Generate PDF via API
+    const pdfRes = await fetch("/api/generatePdfReport", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        inputImageUrl,
+        resultImageUrl: aiResults.resultImageUrl || "",
+        aiResults,
+        cancerType,
+        patient,
+        appointment,
+        doctor,
+      }),
+    });
+
+    console.log("PDF generation response status:", pdfRes);
+
+    if (!pdfRes.ok) {
+      throw new Error("Failed to generate PDF report");
     }
-  };
+
+    // If your API returns Uint8Array as bytes
+    const pdfBytes = await pdfRes.arrayBuffer();
+    
+    // 3. Upload PDF to Cloudinary via API
+    const formData = new FormData();
+    const pdfBlob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const pdfFile = new File([pdfBlob], `screening_report_${Date.now()}.pdf`, {
+      type: 'application/pdf'
+    });
+    formData.append("file", pdfFile);
+
+
+
+    console.log("Uploading PDF to Cloudinary with file:", pdfFile)
+
+
+
+    
+    const uploadRes = await fetch("/api/uploadPdfToCloudinary", {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!uploadRes.ok) {
+      const errorText = await uploadRes.text();
+      console.error("Upload error response:", errorText);
+      throw new Error(`Failed to upload PDF report: ${uploadRes.status} ${errorText}`);
+    }
+
+    const { secure_url: reportPdfUrl } = await uploadRes.json();
+    return reportPdfUrl;
+  } catch (error) {
+    console.error("PDF generation/upload error:", error);
+    throw new Error("Failed to generate and upload PDF report");
+  }
+};
+
+
+
+
+
+
+
+
+
 
   // Process image with AI Model
   const processWithAI = async (imageUrl) => {

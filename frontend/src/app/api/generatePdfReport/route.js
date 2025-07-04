@@ -25,7 +25,8 @@ export async function POST(request) {
     });
 
     // Return PDF as binary data that can be converted to Blob on client
-    return new NextResponse(pdfBytes, {
+    return new Response(pdfBytes, {
+        status: 200,
       headers: {
         "Content-Type": "application/pdf",
         "Content-Disposition": "attachment; filename=screening-report.pdf",
@@ -33,7 +34,7 @@ export async function POST(request) {
     });
   } catch (error) {
     console.error("PDF generation error:", error);
-    return new NextResponse(JSON.stringify({ error: "Failed to generate PDF report" }), { 
+    return new Response(JSON.stringify({ error: "Failed to generate PDF report" }), { 
       status: 500,
       headers: { "Content-Type": "application/json" }
     });
