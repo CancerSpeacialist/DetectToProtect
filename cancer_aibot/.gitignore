@@ -1,4 +1,4 @@
-
+*.pth
 *.pkl
 *.h5
 *.ckpt
@@ -10,7 +10,7 @@ venv/
 __pycache__/
 .env
 # Ignore model files
-
+*.pth
 *.pkl
 *.h5
 *.onnx

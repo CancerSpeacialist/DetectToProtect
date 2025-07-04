@@ -16,9 +16,9 @@ class MedicalResponseGenerator:
 
     def get_generation_config(self):
         return {
-            "temperature": 0.3,
-            "top_p": 0.8,
-            "top_k": 20,
+            "temperature": 0.4,
+            "top_p": 0.9,
+            "top_k": 40,
             "max_output_tokens": 1024
         }
 
@@ -32,16 +32,18 @@ class MedicalResponseGenerator:
     def generate_response(self, prompt: str, context: str = "") -> str:
         try:
             full_prompt = (
-                f"Context: {context}\n\n"
-                f"Question: {prompt}\n\n"
-                "Requirements:\n"
-               "Instructions:\n"
-                "- Answer in 3–4 sentences only\n"
-                "- Be medically accurate and concise\n"
-                "- Focus only on cancer-related facts\n"
-                "- Avoid unnecessary background or repetition\n"
-                "- If unsure, suggest consulting a doctor"
-
+                "You are a knowledgeable medical assistant. Provide helpful, accurate medical information "
+                "while emphasizing the importance of professional medical consultation when appropriate.\n\n"
+                f"Context: {context}\n"
+                f"Medical Question: {prompt}\n\n"
+                "Instructions:\n"
+                "- Provide comprehensive medical information about the condition or symptom\n"
+                "- Include common causes, symptoms, and general treatment approaches\n"
+                "- Be informative but not overly technical\n"
+                "- Always recommend consulting healthcare professionals for diagnosis and treatment\n"
+                "- Address all types of medical conditions, not just cancer\n"
+                "- Be empathetic and supportive in your response\n"
+                "- Provide 4-6 sentences with useful information\n"
             )
             response = self.model.generate_content(full_prompt)
             return self.validate_response(response.text)
@@ -59,8 +61,9 @@ medical_response_generator = MedicalResponseGenerator()
 def generate_medical_response(prompt: str, context: str = "", language: str = "en") -> str:
     """Generate medical response with language support"""
     if language == "hi":
-        system_prompt = f"{context} हिंदी में जवाब दें। केवल चिकित्सा और कैंसर संबंधी जानकारी प्रदान करें।"
+        system_prompt = f"{context} हिंदी में जवाब दें। चिकित्सकीय रूप से सटीक जानकारी प्रदान करें। कैंसर से संबंधित प्रतिक्रियाओं को प्राथमिकता दें, लेकिन यदि स्पष्ट रूप से चिकित्सा संबंधी लक्षण हों तो अन्य तत्काल लक्षणों पर ध्यान दें।"
     else:
-        system_prompt = f"{context} Provide only medical and cancer-related information."
+        system_prompt = f"{context} Provide medically accurate information. Prioritize cancer-related responses, but address other urgent symptoms if clearly medical."
+
     
     return medical_response_generator.generate_response(system_prompt, context)

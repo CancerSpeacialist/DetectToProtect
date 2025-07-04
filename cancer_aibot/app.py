@@ -9,7 +9,8 @@ from gemini_config import generate_medical_response
 
 app = Flask(__name__)
 app.config['JSON_SORT_KEYS'] = False
-CORS(app, origins=["http://localhost:3000"])
+CORS(app, origins=["http://localhost:3000", "https://detect-to-protect.vercel.app", "http://192.168.31.59:5000"])
+
 
 # Initialize chatbot
 try:

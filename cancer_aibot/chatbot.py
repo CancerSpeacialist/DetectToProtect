@@ -79,10 +79,87 @@ class MedicalChatBot:
             self.semantic_model = None
 
     def is_medical_question(self, text: str) -> bool:
+       # ...existing code...
         medical_keywords = [
-            'cancer', 'tumor', 'symptom', 'chemo', 'radiation', 'diagnosis', 'oncology',
-            'biopsy', 'treatment', 'metastasis', 'oncologist', 'side effects', 'malignant'
-        ]
+    # Cancer & Oncology
+    'cancer', 'tumor', 'malignant', 'benign', 'metastasis', 'oncology', 'oncologist', 'carcinoma', 'sarcoma',
+    'lymphoma', 'leukemia', 'melanoma', 'biopsy', 'chemotherapy', 'chemo', 'radiation', 'radiotherapy',
+    'immunotherapy', 'targeted therapy', 'remission', 'recurrence', 'screening', 'staging', 'prognosis',
+    'palliative', 'neoplasm', 'cytology', 'histology', 'in situ', 'adenocarcinoma', 'squamous cell', 'basal cell',
+    'metastatic', 'primary tumor', 'secondary tumor', 'oncogene', 'tumor marker', 'PET scan', 'CT scan', 'MRI',
+    'ultrasound', 'mammogram', 'colonoscopy', 'pap smear', 'PSA', 'BRCA', 'HER2', 'biomarker', 'sentinel node',
+    'lymph node', 'surgical oncology', 'radiologist', 'pathologist', 'clinical trial', 'protocol', 'invasive',
+    'noninvasive', 'adjuvant', 'neoadjuvant', 'maintenance therapy', 'precision medicine', 'genetic testing',
+
+    # Symptoms & Signs
+    'symptom', 'pain', 'fatigue', 'fever', 'nausea', 'vomiting', 'cough', 'bleeding', 'swelling', 'weight loss',
+    'appetite loss', 'night sweats', 'itching', 'rash', 'headache', 'dizziness', 'shortness of breath', 'dyspnea',
+    'chills', 'sore throat', 'diarrhea', 'constipation', 'jaundice', 'anemia', 'bruising', 'lump', 'mass',
+    'palpitation', 'edema', 'inflammation', 'infection', 'ulcer', 'lesion', 'discharge', 'cramping', 'stiffness',
+    'weakness', 'numbness', 'tingling', 'confusion', 'memory loss', 'seizure', 'blurred vision', 'double vision',
+
+    # Diagnosis & Tests
+    'diagnosis', 'diagnose', 'test', 'screening', 'blood test', 'CBC', 'urinalysis', 'x-ray', 'MRI', 'CT scan',
+    'PET scan', 'biopsy', 'endoscopy', 'colonoscopy', 'mammogram', 'ultrasound', 'genetic test', 'histopathology',
+    'cytology', 'tumor marker', 'PSA', 'BRCA', 'EKG', 'ECG', 'EEG', 'spirometry', 'bone scan', 'liver function',
+    'kidney function', 'cholesterol', 'glucose', 'HbA1c', 'stool test', 'pap smear', 'culture', 'antibody test',
+
+    # Treatments & Procedures
+    'treatment', 'therapy', 'medication', 'drug', 'prescription', 'surgery', 'operation', 'procedure', 'transplant',
+    'chemotherapy', 'radiation', 'immunotherapy', 'targeted therapy', 'hormone therapy', 'stem cell', 'bone marrow',
+    'dialysis', 'infusion', 'injection', 'vaccine', 'vaccination', 'rehabilitation', 'physical therapy',
+    'occupational therapy', 'speech therapy', 'palliative care', 'hospice', 'pain management', 'analgesic',
+    'antibiotic', 'antiviral', 'antifungal', 'antidepressant', 'anticoagulant', 'antihypertensive', 'insulin',
+    'statin', 'chemoprevention', 'prophylaxis', 'supplement', 'vitamin', 'nutritional support', 'IV', 'catheter',
+    'stent', 'pacemaker', 'defibrillator', 'intubation', 'ventilator', 'oxygen therapy', 'laser therapy',
+
+    # Medical Specialties & Professionals
+    'doctor', 'physician', 'nurse', 'specialist', 'surgeon', 'oncologist', 'hematologist', 'radiologist',
+    'pathologist', 'cardiologist', 'neurologist', 'endocrinologist', 'gastroenterologist', 'dermatologist',
+    'urologist', 'gynecologist', 'pediatrician', 'psychiatrist', 'psychologist', 'therapist', 'pharmacist',
+    'nutritionist', 'dietitian', 'anesthesiologist', 'immunologist', 'rheumatologist', 'pulmonologist',
+    'nephrologist', 'orthopedist', 'ophthalmologist', 'otolaryngologist', 'ENT', 'primary care', 'family doctor',
+
+    # Diseases & Conditions
+    'disease', 'disorder', 'illness', 'infection', 'virus', 'bacteria', 'fungus', 'parasite', 'autoimmune',
+    'diabetes', 'hypertension', 'high blood pressure', 'stroke', 'heart attack', 'myocardial infarction',
+    'arrhythmia', 'asthma', 'COPD', 'bronchitis', 'pneumonia', 'tuberculosis', 'hepatitis', 'cirrhosis',
+    'kidney failure', 'renal failure', 'liver failure', 'anemia', 'leukemia', 'lymphoma', 'HIV', 'AIDS',
+    'arthritis', 'osteoporosis', 'epilepsy', 'seizure', 'migraine', 'depression', 'anxiety', 'bipolar',
+    'schizophrenia', 'autism', 'dementia', 'Alzheimer', 'Parkinson', 'multiple sclerosis', 'lupus', 'psoriasis',
+    'eczema', 'dermatitis', 'obesity', 'overweight', 'malnutrition', 'dehydration', 'allergy', 'anaphylaxis',
+
+    # Anatomy & Physiology
+    'organ', 'tissue', 'cell', 'gene', 'chromosome', 'DNA', 'RNA', 'protein', 'enzyme', 'hormone', 'immune',
+    'antibody', 'antigen', 'blood', 'plasma', 'serum', 'bone', 'muscle', 'nerve', 'artery', 'vein', 'capillary',
+    'heart', 'lung', 'liver', 'kidney', 'pancreas', 'spleen', 'stomach', 'intestine', 'colon', 'rectum', 'bladder',
+    'prostate', 'uterus', 'ovary', 'testis', 'brain', 'spinal cord', 'skin', 'hair', 'nail', 'eye', 'ear', 'nose',
+    'throat', 'mouth', 'tongue', 'tooth', 'gland', 'lymph', 'lymph node', 'bone marrow',
+
+    # General Health & Wellness
+    'health', 'wellness', 'prevention', 'screening', 'checkup', 'vaccination', 'immunization', 'exercise',
+    'fitness', 'diet', 'nutrition', 'weight', 'BMI', 'hydration', 'sleep', 'stress', 'mental health', 'anxiety',
+    'depression', 'smoking', 'alcohol', 'substance abuse', 'addiction', 'recovery', 'support group', 'counseling',
+    'therapy', 'self-care', 'hygiene', 'sanitation', 'first aid', 'emergency', 'triage', 'ambulance', 'paramedic',
+
+    # Side Effects & Complications
+    'side effect', 'adverse effect', 'complication', 'allergy', 'reaction', 'toxicity', 'overdose', 'withdrawal',
+    'dependency', 'tolerance', 'resistance', 'mutation', 'relapse', 'secondary infection', 'superinfection',
+    'immunosuppression', 'neutropenia', 'thrombocytopenia', 'anemia', 'alopecia', 'mucositis', 'neuropathy',
+    'cardiotoxicity', 'hepatotoxicity', 'nephrotoxicity', 'ototoxicity', 'myelosuppression', 'fatigue',
+
+    # Medical Equipment & Devices
+    'monitor', 'infusion pump', 'IV', 'catheter', 'stent', 'pacemaker', 'defibrillator', 'ventilator', 'oxygen',
+    'wheelchair', 'walker', 'crutch', 'prosthesis', 'implant', 'hearing aid', 'glasses', 'contact lens', 'brace',
+    'splint', 'cast', 'sling', 'bandage', 'dressing', 'suture', 'scalpel', 'forceps', 'syringe', 'needle',
+
+    # Miscellaneous
+    'clinical trial', 'protocol', 'placebo', 'randomized', 'double-blind', 'informed consent', 'ethics',
+    'insurance', 'coverage', 'copay', 'deductible', 'referral', 'consultation', 'follow-up', 'discharge',
+    'admission', 'outpatient', 'inpatient', 'ward', 'ICU', 'ER', 'emergency room', 'hospital', 'clinic', 'pharmacy',
+    'prescription', 'over-the-counter', 'generic', 'brand name', 'formulary', 'prior authorization', 'medicare',
+    'medicaid', 'HMO', 'PPO', 'primary care', 'specialist', 'telemedicine', 'virtual visit', 'appointment'
+]
         return any(word in text.lower() for word in medical_keywords)
 
     def get_kb_response(self, query: str) -> Optional[Dict]:
@@ -96,7 +173,7 @@ class MedicalChatBot:
             best_idx = np.argmax(sims)
             best_score = sims[best_idx]
             print(f"Semantic similarity score: {best_score:.2f} for '{query}'")
-            if best_score > 0.85:
+            if best_score > 0.70:
                 pattern = self.all_patterns[best_idx]
                 entry = self.pattern_to_entry[pattern]
                 return {"answer": entry['answer'], "source": "semantic_search", "confidence": best_score}
