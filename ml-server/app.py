@@ -18,8 +18,8 @@ def home():
 @app.route("/predict", methods=["POST"])
 def predict():
     data = request.get_json()
-    image_url = data.get("imageUrl")
-    cancer_type = data.get("cancerType")
+    image_url = data.get("image_url")
+    cancer_type = data.get("cancer_type")
 
     if not image_url:
         return jsonify({"error": "Image URL is required"}), 400
