@@ -77,11 +77,11 @@ export default function ResultsModal({
                     <div className="mt-1">
                       <div className="flex items-center gap-2">
                         <Progress
-                          value={aiResults.confidence}
+                          value={aiResults.confidence * 100}
                           className="flex-1"
                         />
                         <span className="text-sm font-medium">
-                          {aiResults.confidence}%
+                          {aiResults.confidence * 100}%
                         </span>
                       </div>
                     </div>

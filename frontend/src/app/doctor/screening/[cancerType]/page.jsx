@@ -261,7 +261,7 @@ const generatePDFReport = async ({
       throw new Error(`Failed to upload PDF report: ${uploadRes.status} ${errorText}`);
     }
 
-    const { secure_url: reportPdfUrl } = await uploadRes.json();
+    const { url : reportPdfUrl } = await uploadRes.json();
     return reportPdfUrl;
   } catch (error) {
     console.error("PDF generation/upload error:", error);
